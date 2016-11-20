@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/Linearlayout"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    android:weightSum="100" >
+
+    <LinearLayout
+        android:layout_alignParentTop="true"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="20"
+        android:weightSum="1"
+        android:id="@+id/scores">
+
+        <TextView
+            android:layout_width="75dp"
+            android:layout_height="match_parent"
+            android:text="@string/placeholder_score"
+            android:textSize="15sp"
+            android:gravity="center"
+            android:layout_weight="0.25"
+            android:textColor="@color/scrabble_red"/>
+        <TextView
+            android:layout_width="75dp"
+            android:layout_height="match_parent"
+            android:text="@string/placeholder_score"
+            android:textSize="15sp"
+            android:layout_weight="0.25"
+            android:gravity="center"
+            android:textColor="@color/scrabble_red"/>
+        <TextView
+            android:layout_width="75dp"
+            android:layout_height="match_parent"
+            android:text="@string/placeholder_score"
+            android:textSize="15sp"
+            android:layout_weight="0.25"
+            android:gravity="center"
+            android:textColor="@color/scrabble_red"/>
+        <TextView
+            android:layout_width="75dp"
+            android:layout_height="match_parent"
+            android:text="@string/placeholder_score"
+            android:textSize="15sp"
+            android:layout_weight="0.25"
+            android:gravity="center"
+            android:textColor="@color/scrabble_red"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/gameBoard"
+        android:layout_below="@+id/scores"
+        android:layout_width="fill_parent"
+        android:layout_height="300dp"
+        android:layout_weight="70">
+
+        <GridView
+            android:id="@+id/pieces"
+            android:elevation="5dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/transparent"
+            android:gravity="center_horizontal"
+            android:layout_centerInParent="true"
+            android:numColumns="15"
+            >
+        </GridView>
+
+        <GridView
+            android:id="@+id/gameboard"
+            android:elevation="5dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/transparent"
+            android:gravity="center_horizontal"
+            android:layout_centerInParent="true"
+            android:numColumns="15"
+            >
+        </GridView>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/tiles"
+        android:layout_alignParentBottom="true"
+        android:paddingTop="10dp"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="10"
+        android:weightSum="1">
+
+        <ImageView
+            android:id="@+id/piece_1"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/a"
+            android:layout_weight="0.14"/>
+        <ImageView
+            android:id="@+id/piece_2"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/b"
+            android:layout_weight="0.14"/>
+        <ImageView
+            android:id="@+id/piece_3"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/c"
+            android:layout_weight="0.14"/>
+        <ImageView
+            android:id="@+id/piece_4"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/d"
+            android:layout_weight="0.14"/>
+        <ImageView
+            android:id="@+id/piece_5"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/e"
+            android:layout_weight="0.14"/>
+        <ImageView
+            android:id="@+id/piece_6"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/f"
+            android:layout_weight="0.14"/>
+        <ImageView
+            android:id="@+id/piece_7"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/g"
+            android:layout_weight="0.14"/>
+    </LinearLayout>
+
+
+
+
+
+</LinearLayout>
