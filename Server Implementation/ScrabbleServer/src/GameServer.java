@@ -64,7 +64,7 @@ public class GameServer
                             Thread t = new Thread(spectatorThreads.get(i));
                             t.start();
                             spectatorCount++;
-                            System.out.println("Spectators " + spectatorCount");
+                            System.out.println("Spectators " + spectatorCount);
                             break;
                         }
                     }
@@ -198,7 +198,7 @@ class ClientThread implements Runnable
     private ClientThread [] threads = new ClientThread[];
     private String name;
     private String role;
-    //role signifier 
+    //role signifier
     public ClientThread(Socket clientSocket, ClientThread [] threads)
     {
         this.clientSocket = clientSocket;
