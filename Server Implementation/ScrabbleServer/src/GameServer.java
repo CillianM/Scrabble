@@ -15,6 +15,7 @@ public class GameServer
     Board gameBoard;
     HashMap<Integer, String> playerData;
     Bag bag;
+    DictSearch dictionary;
 
     public static void main(String [] args)
     {
@@ -61,6 +62,7 @@ public class GameServer
         //specified amount of client sockets
 
         bag = new Bag();
+        DictSearch dictionary = new DictSearch();
     }
 
     public String encodeData(String input)
@@ -94,7 +96,7 @@ public class GameServer
     public boolean validateMove(String word)
     {
         //check if the word is legal
-        return true;
+        return dictionary.search(word);
     }
 
     public void receiveData(Socket source, String data)

@@ -7,9 +7,9 @@ public class Board
     public Board()
     {
         //Instantiate playing board
-
+        playingBoard = new Cell[15][15];
         //add star
-        playingBoard[7][7] = new Cell(5);
+        playingBoard[7][7] = new Cell(1);
 
         //instantiate triple words
         Point [] locations = new Point[]{
@@ -22,7 +22,7 @@ public class Board
                 new Point(7,14),
                 new Point(14,14)
         };
-        add(locations,4);
+        add(locations,5);
         //instantiate triple letters
         locations = new Point[]{
                 new Point(5,1),
@@ -38,7 +38,7 @@ public class Board
                 new Point(5,13),
                 new Point(9,13)
         };
-        add(locations,2);
+        add(locations,4);
         //instantiate double words
         locations = new Point[]{
                 new Point(1,1),
@@ -86,7 +86,7 @@ public class Board
                 new Point(3,14),
                 new Point(11,14)
         };
-        add(locations,1);
+        add(locations,2);
         fillBlanks();
     }
 
