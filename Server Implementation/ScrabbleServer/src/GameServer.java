@@ -197,7 +197,7 @@ class ClientThread implements Runnable
     private Socket clientSocket = null;
     private ClientThread [] threads = new ClientThread[];
     private String name;
-    private String quitMsg;
+    private String role;
 
     public ClientThread(Socket clientSocket, ClientThread [] threads)
     {
@@ -208,8 +208,8 @@ class ClientThread implements Runnable
             inputStream = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             outputStream = new PrintStream(clientSocket.getOutputStream());
             this.name = inputStream.readLine();
-            this.quitMsg = "###" + clientSocket.getRemoteSocketAddress().toString() + "***";
-            this.outputStream.println(quitMsg);
+            this.role = "player";
+            this.outputStream.println(role);
         }
         catch (IOException e)
         {
@@ -236,7 +236,7 @@ class ClientThread implements Runnable
             while(true)
             {
                 String line = inputStream.readLine();
-                if(line.equals(quitMsg))
+                if(line.equals(role))
                 {
                     break;
                 }
@@ -287,7 +287,7 @@ class ClientThread implements Runnable
         private final  ArrayList<SpectatorThread> threads;
         private int maxClientsCount;
         private String name;
-        private String quitMsg;
+        private String role;
 
         public SpectatorThread(Socket clientSocket, ArrayList<SpectatorThread> threads)
         {
@@ -299,8 +299,8 @@ class ClientThread implements Runnable
                 inputStream = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 outputStream = new PrintStream(clientSocket.getOutputStream());
                 this.name = inputStream.readLine();
-                this.quitMsg = "###" +clientSocket.getRemoteSocketAddress().toString() + "***";
-                this.outputStream.println(quitMsg);
+                this.role = "spectator";
+                this.outputStream.println(role);
             }
             catch (IOException e)
             {
@@ -326,7 +326,7 @@ class ClientThread implements Runnable
                 while (true)
                 {
                     String line = inputStream.readLine();
-                    if (line.equals(quitMsg))
+                    if (line.equals(role))
                     {
                         break;
                     }
