@@ -198,7 +198,7 @@ class ClientThread implements Runnable
     private ClientThread [] threads = new ClientThread[];
     private String name;
     private String role;
-
+    //role signifier 
     public ClientThread(Socket clientSocket, ClientThread [] threads)
     {
         this.clientSocket = clientSocket;
