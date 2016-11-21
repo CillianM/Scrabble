@@ -17,6 +17,65 @@ public class GameServer
     Board gameBoard;
     HashMap<Integer, String> playerData;
     Bag bag;
+    DictSearch dictionary;
+
+    public static void main(String [] args)
+    {
+        int portNumber = 7777;
+
+        try
+        {
+            serverSocket = new ServerSocket(portNumber);
+        }
+        catch (IOException e)
+        {
+            System.out.println(e);
+        }
+
+        while(true)
+        {
+            //try to add as player, otherwise add to spectator arraylist
+            try
+            {
+                clientSocket = serverSocket.accept();
+                if(clientCount != 4 )
+                {
+                    for(int i = 0; i < clientThreads.length; i++)
+                    {
+                        if(clientThreads[i] == null)
+                        {
+                            clientThreads[i] = new ClientThread(clientSocket, clientThreads))
+                            Thread t = new Thread(clientThreads[i]);
+                            t.start();
+                            clientCount++;
+                            System.out.println("Clients " + clientCount);
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    int size = spectatorThreads.size();
+                    for(int i = 0; i < size; i++)
+                    {
+                        if(spectatorThreads.get(i) == null)
+                        {
+                            spectatorThreads.set(i, new SpectatorThread(clientSocket, spectatorThreads));
+                            Thread t = new Thread(spectatorThreads.get(i));
+                            t.start();
+                            spectatorCount++;
+                            System.out.println("Spectators " + spectatorCount");
+                            break;
+                        }
+                    }
+                }
+            }
+            catch(IOException e)
+            {
+                System.out.println(e);
+            }
+        }
+    }
 
     public static void main(String [] args)
     {
@@ -82,6 +141,7 @@ public class GameServer
         //specified amount of client sockets
 
         bag = new Bag();
+        DictSearch dictionary = new DictSearch();
     }
 
     public String encodeData(String input)
@@ -115,7 +175,7 @@ public class GameServer
     public boolean validateMove(String word)
     {
         //check if the word is legal
-        return true;
+        return dictionary.search(word);
     }
 
     public void receiveData(Socket source, String data)
