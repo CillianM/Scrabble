@@ -64,7 +64,65 @@ public class GameServer
                             Thread t = new Thread(spectatorThreads.get(i));
                             t.start();
                             spectatorCount++;
-                            System.out.println("Spectators " + spectatorCount");
+                            System.out.println("Spectators " + spectatorCount);
+                            break;
+                        }
+                    }
+                }
+            }
+            catch(IOException e)
+            {
+                System.out.println(e);
+            }
+        }
+    }
+
+    public static void main(String [] args)
+    {
+        int portNumber = 7777;
+
+        try
+        {
+            serverSocket = new ServerSocket(portNumber);
+        }
+        catch (IOException e)
+        {
+            System.out.println(e);
+        }
+
+        while(true)
+        {
+            //try to add as player, otherwise add to spectator arraylist
+            try
+            {
+                clientSocket = serverSocket.accept();
+                if(clientCount != 4 )
+                {
+                    for(int i = 0; i < clientThreads.length; i++)
+                    {
+                        if(clientThreads[i] == null)
+                        {
+                            clientThreads[i] = new ClientThread(clientSocket, clientThreads))
+                            Thread t = new Thread(clientThreads[i]);
+                            t.start();
+                            clientCount++;
+                            System.out.println("Clients " + clientCount);
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    int size = spectatorThreads.size();
+                    for(int i = 0; i < size; i++)
+                    {
+                        if(spectatorThreads.get(i) == null)
+                        {
+                            spectatorThreads.set(i, new SpectatorThread(clientSocket, spectatorThreads));
+                            Thread t = new Thread(spectatorThreads.get(i));
+                            t.start();
+                            spectatorCount++;
+                            System.out.println("Spectators " + spectatorCount);
                             break;
                         }
                     }
@@ -139,8 +197,8 @@ class ClientThread implements Runnable
     private Socket clientSocket = null;
     private ClientThread [] threads = new ClientThread[];
     private String name;
-    private String quitMsg;
-
+    private String role;
+    //role signifier
     public ClientThread(Socket clientSocket, ClientThread [] threads)
     {
         this.clientSocket = clientSocket;
@@ -150,8 +208,8 @@ class ClientThread implements Runnable
             inputStream = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             outputStream = new PrintStream(clientSocket.getOutputStream());
             this.name = inputStream.readLine();
-            this.quitMsg = "###" + clientSocket.getRemoteSocketAddress().toString() + "***";
-            this.outputStream.println(quitMsg);
+            this.role = "player";
+            this.outputStream.println(role);
         }
         catch (IOException e)
         {
@@ -178,7 +236,7 @@ class ClientThread implements Runnable
             while(true)
             {
                 String line = inputStream.readLine();
-                if(line.equals(quitMsg))
+                if(line.equals(role))
                 {
                     break;
                 }
@@ -229,7 +287,7 @@ class ClientThread implements Runnable
         private final  ArrayList<SpectatorThread> threads;
         private int maxClientsCount;
         private String name;
-        private String quitMsg;
+        private String role;
 
         public SpectatorThread(Socket clientSocket, ArrayList<SpectatorThread> threads)
         {
@@ -241,8 +299,8 @@ class ClientThread implements Runnable
                 inputStream = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 outputStream = new PrintStream(clientSocket.getOutputStream());
                 this.name = inputStream.readLine();
-                this.quitMsg = "###" +clientSocket.getRemoteSocketAddress().toString() + "***";
-                this.outputStream.println(quitMsg);
+                this.role = "spectator";
+                this.outputStream.println(role);
             }
             catch (IOException e)
             {
@@ -268,7 +326,7 @@ class ClientThread implements Runnable
                 while (true)
                 {
                     String line = inputStream.readLine();
-                    if (line.equals(quitMsg))
+                    if (line.equals(role))
                     {
                         break;
                     }
