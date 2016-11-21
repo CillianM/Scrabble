@@ -178,9 +178,11 @@ public class GameServer
         return dictionary.search(word);
     }
 
-    public void receiveData(Socket source, String data)
+    public void receiveData(String data)
     {
-        //receive data from the specified port
+        this.data = data;
+        
+
     }
 
     public boolean checkConnections()
@@ -246,7 +248,9 @@ class ClientThread implements Runnable
                     {
                         if(threads[i] != null && threads[i] != this)
                         {
-                            //send move?
+                            //get move from players
+                            String data = inputStream.readLine();
+                            recieveData(data);
                         }
                     }
                 }
