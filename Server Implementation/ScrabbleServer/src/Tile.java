@@ -3,9 +3,11 @@ public class Tile
     char letter;
     int pointsValue;
 
-    public Tile(char letter, int points)
+    public Tile(char l, int p)
     {
         //Instantiate the tile with a set letter and points
+        letter = l;
+        pointsValue = p;
     }
 
     public int getPoints()
