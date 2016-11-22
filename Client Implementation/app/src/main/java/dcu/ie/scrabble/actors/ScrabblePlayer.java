@@ -12,7 +12,9 @@ public class ScrabblePlayer extends Spectator
     String name;
 
     //A collention of tiles the player has
-    Tile [] playerRack;
+
+
+    char [] playerRack;
 
     //This is the constructor
     public ScrabblePlayer(String name)
@@ -31,7 +33,7 @@ public class ScrabblePlayer extends Spectator
         return name;
     }
 
-    public void setRack(Tile[] r)
+    public void setRack(char[] r)
     {
         //Sets the player's rack given to by the GameClient
     }
