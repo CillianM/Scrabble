@@ -47,7 +47,7 @@ public class GameServer
                     {
                         if(clientThreads[i] == null)
                         {
-                            clientThreads[i] = new ClientThread(clientSocket, clientThreads));
+                            clientThreads[i] = new ClientThread(clientSocket, clientThreads);
                             Thread t = new Thread(clientThreads[i]);
                             t.start();
                             clientCount++;
@@ -144,14 +144,14 @@ public class GameServer
         //update specified player with specified data
     }
 
-    public void updateBoard(cellSetter[] letterArray)
+    public void updateBoard(CellSetter[] letterArray)
     {
         //Update the board with the specified data
 
-        for(int i = 0; i < letterArray.length(); i++)
+        for(int i = 0; i < letterArray.length; i++)
         {
             char c = letterArray[i].character;
-            gameBoard.setCells(letterArray[i].positions, new Tile(c, letterPoints.get(c)));
+            gameBoard.setCells(letterArray[i].position, new Tile(c, letterPoints.get(c)));
         }
     }
 
