@@ -13,7 +13,7 @@ public class GameServer
     private static ServerSocket serverSocket = null;
     private static int clientCount = 0;
     private static int spectatorCount = 0;
-    private static ClientThread [] clientThreads = new ClientThread[];
+    private static ClientThread [] clientThreads = new ClientThread[4];
     private static Socket clientSocket = null;
     private static ArrayList<SpectatorThread> spectatorThreads = new ArrayList<>(Collections.nCopies(10, null));
     Board gameBoard;
@@ -163,7 +163,7 @@ public class GameServer
 
     public void receiveData(String data)
     {
-        this.data = data;
+
         
 
     }
@@ -180,7 +180,7 @@ class ClientThread implements Runnable
     private BufferedReader inputStream = null;
     private PrintStream outputStream = null;
     private Socket clientSocket = null;
-    private ClientThread [] threads = new ClientThread[];
+    private ClientThread [] threads;
     private String name;
     private String role;
     //role signifier
@@ -233,7 +233,6 @@ class ClientThread implements Runnable
                         {
                             //get move from players
                             String data = inputStream.readLine();
-                            recieveData(data);
                         }
                     }
                 }
