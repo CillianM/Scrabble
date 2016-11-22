@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    android:background="@color/white">
+
+    <Spinner
+        android:id="@+id/potentialItem"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_above="@+id/submit" />
+
+    <Button
+        android:id="@+id/submit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Submit"
+        android:layout_centerVertical="true"
+        android:onClick="returnLetter"
+        android:layout_alignRight="@+id/potentialItem"
+        android:layout_alignEnd="@+id/potentialItem"
+        android:layout_alignLeft="@+id/potentialItem"
+        android:layout_alignStart="@+id/potentialItem" />
+
+</RelativeLayout>

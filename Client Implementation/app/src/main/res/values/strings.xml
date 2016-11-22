@@ -15,4 +15,5 @@
     <string name="title_activity_splash_screen">Splash Screen</string>
     <string name="SplashText">CA314 Scrabble App</string>
     <string name="title_activity_connection">Connection Activity</string>
+    <string name="title_activity_space_replacement">SpaceReplacement</string>
 </resources>
