@@ -4,7 +4,9 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.ArrayList;
 
 public class GameServer
 {
@@ -264,96 +266,97 @@ class ClientThread implements Runnable
 
     }
 
-    class SpectatorThread implements Runnable
+
+
+}
+class SpectatorThread implements Runnable
+{
+    private BufferedReader inputStream = null;
+    private PrintStream outputStream = null;
+    private Socket clientSocket = null;
+    private final  ArrayList<SpectatorThread> threads;
+    private int maxClientsCount;
+    private String name;
+    private String role;
+
+    public SpectatorThread(Socket clientSocket, ArrayList<SpectatorThread> threads)
     {
-        private BufferedReader inputStream = null;
-        private PrintStream outputStream = null;
-        private Socket clientSocket = null;
-        private final  ArrayList<SpectatorThread> threads;
-        private int maxClientsCount;
-        private String name;
-        private String role;
-
-        public SpectatorThread(Socket clientSocket, ArrayList<SpectatorThread> threads)
+        this.clientSocket = clientSocket;
+        this.threads = threads;
+        maxClientsCount = threads.size();
+        try
         {
-            this.clientSocket = clientSocket;
-            this.threads = threads;
-            maxClientsCount = threads.size();
-            try
-            {
-                inputStream = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                outputStream = new PrintStream(clientSocket.getOutputStream());
-                this.name = inputStream.readLine();
-                this.role = "spectator";
-                this.outputStream.println(role);
-            }
-            catch (IOException e)
-            {
-
-            }
+            inputStream = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            outputStream = new PrintStream(clientSocket.getOutputStream());
+            this.name = inputStream.readLine();
+            this.role = "spectator";
+            this.outputStream.println(role);
         }
-
-        public void run()
+        catch (IOException e)
         {
-            int maxClientsCount = this.maxClientsCount;
-            ArrayList<SpectatorThread> threads = this.threads;
 
-            try
-            {
-
-                for (int i = 0; i < maxClientsCount; i++)
-                {
-                    if (threads.get(i) != null)
-                    {
-                        threads.get(i).outputStream.println(name + " is spectating the game");
-                    }
-                }
-                while (true)
-                {
-                    String line = inputStream.readLine();
-                    if (line.equals(role))
-                    {
-                        break;
-                    }
-                    else
-                    {
-                        for (int i = 0; i < maxClientsCount; i++)
-                        {
-                            if (threads.get(i) != null && threads.get(i) != this)
-                            {
-                                //redundant
-                            }
-                        }
-                    }
-                }
-
-                for (int i = 0; i < maxClientsCount; i++)
-                {
-                    if (threads.get(i) != null && threads.get(i) != this)
-                    {
-                        threads.get(i).outputStream.println(name + " has just left the game...");
-                    }
-                }
-
-                //Remove the users thread
-                for (int i = 0; i < maxClientsCount; i++)
-                {
-                    if (threads.get(i) == this)
-                    {
-                        threads.set(i,null);
-                    }
-                }
-
-                //Close all streams when done
-                inputStream.close();
-                outputStream.close();
-                clientSocket.close();
-            }
-            catch (IOException e)
-            {
-
-            }
         }
     }
 
+    public void run()
+    {
+        int maxClientsCount = this.maxClientsCount;
+        ArrayList<SpectatorThread> threads = this.threads;
+
+        try
+        {
+
+            for (int i = 0; i < maxClientsCount; i++)
+            {
+                if (threads.get(i) != null)
+                {
+                    threads.get(i).outputStream.println(name + " is spectating the game");
+                }
+            }
+            while (true)
+            {
+                String line = inputStream.readLine();
+                if (line.equals(role))
+                {
+                    break;
+                }
+                else
+                {
+                    for (int i = 0; i < maxClientsCount; i++)
+                    {
+                        if (threads.get(i) != null && threads.get(i) != this)
+                        {
+                            //redundant
+                        }
+                    }
+                }
+            }
+
+            for (int i = 0; i < maxClientsCount; i++)
+            {
+                if (threads.get(i) != null && threads.get(i) != this)
+                {
+                    threads.get(i).outputStream.println(name + " has just left the game...");
+                }
+            }
+
+            //Remove the users thread
+            for (int i = 0; i < maxClientsCount; i++)
+            {
+                if (threads.get(i) == this)
+                {
+                    threads.set(i,null);
+                }
+            }
+
+            //Close all streams when done
+            inputStream.close();
+            outputStream.close();
+            clientSocket.close();
+        }
+        catch (IOException e)
+        {
+
+        }
+    }
 }
