@@ -16,10 +16,11 @@ import android.view.View.OnClickListener;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 
+import dcu.ie.scrabble.connectivity.GameClient;
+
 public class ConnectionActivity extends AppCompatActivity {
 
     private UserLoginTask mAuthTask = null;
-    private ServerCheckTask mCheckTask = null;
 
     // UI references.
     private AutoCompleteTextView nameView;
@@ -43,9 +44,6 @@ public class ConnectionActivity extends AppCompatActivity {
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
-
-        mCheckTask = new ServerCheckTask();
-        mCheckTask.execute((Void) null);
     }
 
     private void attemptLogin() {
@@ -149,10 +147,13 @@ public class ConnectionActivity extends AppCompatActivity {
     public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
 
         private final String name;
+        private boolean isPlayer;
 
         UserLoginTask(String name)
         {
+
             this.name = name;
+
         }
 
         @Override
@@ -161,11 +162,11 @@ public class ConnectionActivity extends AppCompatActivity {
 
             try
             {
-                // Simulate network access.
-                Thread.sleep(2000);
+                GameClient.setup("192.168.10.1", name);
+                isPlayer = GameClient.isPlayer();
             }
 
-            catch (InterruptedException e)
+            catch (Exception e)
             {
                 return false;
             }
@@ -179,69 +180,17 @@ public class ConnectionActivity extends AppCompatActivity {
             showProgress(false);
 
             if (success) {
-                startGame(true);
+                startGame(isPlayer);
             }
 
             else
             {
-
+                onCancelled();
             }
         }
 
         @Override
         protected void onCancelled() {
-            mAuthTask = null;
-            showProgress(false);
-        }
-    }
-
-    public class ServerCheckTask extends AsyncTask<Void, Void, Boolean>
-    {
-
-
-        ServerCheckTask()
-        {
-
-        }
-
-        @Override
-        protected Boolean doInBackground(Void... params) {
-            // TODO: attempt authentication against a network service.
-
-            try
-            {
-                // Simulate network access.
-                Thread.sleep(2000);
-
-            }
-            catch (InterruptedException e)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        @Override
-        protected void onPostExecute(final Boolean success)
-        {
-            mCheckTask = null;
-
-
-            if (success)
-            {
-                showProgress(false);
-            }
-
-            else
-            {
-                startGame(false);
-            }
-        }
-
-        @Override
-        protected void onCancelled()
-        {
             mAuthTask = null;
             showProgress(false);
         }

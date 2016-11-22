@@ -91,47 +91,54 @@
         android:weightSum="1">
 
         <ImageView
-            android:id="@+id/piece_1"
+            android:id="@+id/piece_0"
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:src="@drawable/a"
-            android:layout_weight="0.14"/>
+            android:layout_weight="0.14"
+            android:onClick="placePiece"/>
+        <ImageView
+            android:id="@+id/piece_1"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/b"
+            android:layout_weight="0.14"
+            android:onClick="placePiece"/>
         <ImageView
             android:id="@+id/piece_2"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:src="@drawable/b"
-            android:layout_weight="0.14"/>
+            android:src="@drawable/c"
+            android:layout_weight="0.14"
+            android:onClick="placePiece"/>
         <ImageView
             android:id="@+id/piece_3"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:src="@drawable/c"
-            android:layout_weight="0.14"/>
+            android:src="@drawable/d"
+            android:layout_weight="0.14"
+            android:onClick="placePiece"/>
         <ImageView
             android:id="@+id/piece_4"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:src="@drawable/d"
-            android:layout_weight="0.14"/>
+            android:src="@drawable/e"
+            android:layout_weight="0.14"
+            android:onClick="placePiece"/>
         <ImageView
             android:id="@+id/piece_5"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:src="@drawable/e"
-            android:layout_weight="0.14"/>
+            android:src="@drawable/f"
+            android:layout_weight="0.14"
+            android:onClick="placePiece"/>
         <ImageView
             android:id="@+id/piece_6"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:src="@drawable/f"
-            android:layout_weight="0.14"/>
-        <ImageView
-            android:id="@+id/piece_7"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
             android:src="@drawable/g"
-            android:layout_weight="0.14"/>
+            android:layout_weight="0.14"
+            android:onClick="placePiece"/>
     </LinearLayout>
 
 
