@@ -15,6 +15,7 @@ public class GameServer
     private static Socket clientSocket = null;
     private static ArrayList<SpectatorThread> spectatorThreads = new ArrayList<>(Collections.nCopies(10, null));
     Board gameBoard;
+    HashMap<Character, Integer> letterPoints;
     HashMap<Integer, String> playerData;
     Bag bag;
     DictSearch dictionary;
@@ -44,65 +45,7 @@ public class GameServer
                     {
                         if(clientThreads[i] == null)
                         {
-                            clientThreads[i] = new ClientThread(clientSocket, clientThreads))
-                            Thread t = new Thread(clientThreads[i]);
-                            t.start();
-                            clientCount++;
-                            System.out.println("Clients " + clientCount);
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    int size = spectatorThreads.size();
-                    for(int i = 0; i < size; i++)
-                    {
-                        if(spectatorThreads.get(i) == null)
-                        {
-                            spectatorThreads.set(i, new SpectatorThread(clientSocket, spectatorThreads));
-                            Thread t = new Thread(spectatorThreads.get(i));
-                            t.start();
-                            spectatorCount++;
-                            System.out.println("Spectators " + spectatorCount);
-                            break;
-                        }
-                    }
-                }
-            }
-            catch(IOException e)
-            {
-                System.out.println(e);
-            }
-        }
-    }
-
-    public static void main(String [] args)
-    {
-        int portNumber = 7777;
-
-        try
-        {
-            serverSocket = new ServerSocket(portNumber);
-        }
-        catch (IOException e)
-        {
-            System.out.println(e);
-        }
-
-        while(true)
-        {
-            //try to add as player, otherwise add to spectator arraylist
-            try
-            {
-                clientSocket = serverSocket.accept();
-                if(clientCount != 4 )
-                {
-                    for(int i = 0; i < clientThreads.length; i++)
-                    {
-                        if(clientThreads[i] == null)
-                        {
-                            clientThreads[i] = new ClientThread(clientSocket, clientThreads))
+                            clientThreads[i] = new ClientThread(clientSocket, clientThreads));
                             Thread t = new Thread(clientThreads[i]);
                             t.start();
                             clientCount++;
@@ -142,6 +85,38 @@ public class GameServer
 
         bag = new Bag();
         DictSearch dictionary = new DictSearch();
+        assignTilePoints();
+    }
+
+    private void assignTilePoints()
+    {
+        letterPoints.put('A',1);
+        letterPoints.put('B',3);
+        letterPoints.put('C',3);
+        letterPoints.put('D',2);
+        letterPoints.put('E',1);
+        letterPoints.put('F',4);
+        letterPoints.put('G',2); 
+        letterPoints.put('H',4);
+        letterPoints.put('I',1);
+        letterPoints.put('J',8);
+        letterPoints.put('K',5);
+        letterPoints.put('L',1);
+        letterPoints.put('M',3);
+        letterPoints.put('N',1);
+        letterPoints.put('O',1);
+        letterPoints.put('P',3);
+        letterPoints.put('Q',10);
+        letterPoints.put('R',1);
+        letterPoints.put('S',1);
+        letterPoints.put('T',1);
+        letterPoints.put('U',1);
+        letterPoints.put('V',4);
+        letterPoints.put('W',4);
+        letterPoints.put('X',8);
+        letterPoints.put('Y',4);
+        letterPoints.put('Z',10);
+        letterPoints.put(' ',0);
     }
 
     public String encodeData(String input)
@@ -167,9 +142,15 @@ public class GameServer
         //update specified player with specified data
     }
 
-    public void updateBoard(String data)
+    public void updateBoard(cellSetter[] letterArray)
     {
         //Update the board with the specified data
+
+        for(int i = 0; i < letterArray.length(); i++)
+        {
+            char c = letterArray[i].character;
+            gameBoard.setCells(letterArray[i].positions, new Tile(c, letterPoints.get(c)));
+        }
     }
 
     public boolean validateMove(String word)
