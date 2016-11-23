@@ -1,3 +1,5 @@
+package dcu.ie.scrabble.xml_tools;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -7,35 +9,40 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 public class Packet {
 
-	public Packet() {}
+    private Packet() {}
 
-	public Packet(String players[], String currentPlayer, char rack[]) {
-		this.players=players;
-		this.currentPlayer=currentPlayer;
-		this.rack=rack;
-	}
+    public Packet(String players[], String currentPlayer, char[] rack) {
+        this.players=players;
+        this.currentPlayer=currentPlayer;
+        this.rack=rack;
+    }
 
-	public Packet(char tiles[], int scores[], String playerTurn) {
-		this.tiles=tiles;
-		this.scores=scores;
-		this.playerTurn=playerTurn;
-		this.curentPlayer=curentPlayer;
-	}
+    public Packet(char tiles[], int scores[], String playerTurn) {
+        this.tiles=tiles;
+        this.scores=scores;
+        this.playerTurn=playerTurn;
+        this.curentPlayer=curentPlayer;
+    }
 
-	public Packet(CellSetter tileMove[]) {
-		this.tileMove=tileMove;
-	}
-	//Connection
-	String players[];
-	String currentPlayer;
-	char rack[];
+    public Packet(CellSetter tileMove[],String name) {
+        this.tileMove=tileMove;
+        this.curentPlayer=name;
+    }
 
-	//Update Player
-	char tiles[];
-	int scores[];
-	String playerTurn;
-	String curentPlayer;
+    public Packet(CellSetter tileMove[]) {
+        this.tileMove=tileMove;
+    }
+    //Connection
+    public String players[];
+    public String currentPlayer;
+    public char [] rack;
 
-	//User makes a move
-	CellSetter tileMove[];
+    //Update Player
+    public char tiles[];
+    public int scores[];
+    public String playerTurn;
+    public String curentPlayer;
+
+    //User makes a move
+    public CellSetter tileMove[];
 }
