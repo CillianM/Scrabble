@@ -7,14 +7,40 @@
     android:weightSum="100" >
 
     <LinearLayout
+        android:id="@+id/progress"
+        android:layout_alignParentTop="true"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="100"
+        android:visibility="visible">
+
+        <ProgressBar
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+             />
+
+    </LinearLayout>
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/gameScreen"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:weightSum="100"
+        android:visibility="gone">
+
+    <LinearLayout
         android:layout_alignParentTop="true"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_weight="20"
         android:weightSum="1"
+
         android:id="@+id/scores">
 
         <TextView
+            android:id="@+id/player1"
             android:layout_width="75dp"
             android:layout_height="match_parent"
             android:text="@string/placeholder_score"
@@ -23,6 +49,7 @@
             android:layout_weight="0.25"
             android:textColor="@color/scrabble_red"/>
         <TextView
+            android:id="@+id/player2"
             android:layout_width="75dp"
             android:layout_height="match_parent"
             android:text="@string/placeholder_score"
@@ -31,6 +58,7 @@
             android:gravity="center"
             android:textColor="@color/scrabble_red"/>
         <TextView
+            android:id="@+id/player3"
             android:layout_width="75dp"
             android:layout_height="match_parent"
             android:text="@string/placeholder_score"
@@ -39,6 +67,7 @@
             android:gravity="center"
             android:textColor="@color/scrabble_red"/>
         <TextView
+            android:id="@+id/player4"
             android:layout_width="75dp"
             android:layout_height="match_parent"
             android:text="@string/placeholder_score"
@@ -141,7 +170,7 @@
             android:onClick="placePiece"/>
     </LinearLayout>
 
-
+    </LinearLayout>
 
 
 

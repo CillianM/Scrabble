@@ -1,9 +1,13 @@
 package dcu.ie.scrabble;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Point;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -15,39 +19,55 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.lang.reflect.GenericArrayType;
 import java.util.ArrayList;
+
+import javax.xml.bind.JAXBException;
 
 import dcu.ie.scrabble.actors.ScrabblePlayer;
 import dcu.ie.scrabble.actors.Spectator;
 import dcu.ie.scrabble.adapter.*;
 import dcu.ie.scrabble.connectivity.GameClient;
 import dcu.ie.scrabble.game_objects.Board;
+import dcu.ie.scrabble.xml_tools.Packet;
+import dcu.ie.scrabble.xml_tools.*;
 
 public class GameScreen extends AppCompatActivity {
 
-    int greenDot = R.drawable.green_dot;
+    private static final int REQUEST_SPACE_REPLACEMENT = 0;
     BoardAdapter boardAdapter;
     PieceAdapter pieceAdapter;
     Spectator player = null;
+    Packet packet;
+    InitializePlayers initializePlayers;
+    PacketWait wait;
+
+    String myName;
+    boolean myTurn = false;
 
     GridView boardGrid;
     GridView piecesGrid;
 
     Board board = new Board();
 
+    String [] names = new String[4];
+
     //rack
     char [] chars = new char[]{'a','b','c','d','e','f','g'};
     boolean [] tileUsed = new boolean[]{false,false,false,false,false,false,false,false};
     StringBuilder builder = new StringBuilder();
 
+    LinearLayout gameScreen = (LinearLayout) findViewById(R.id.gameScreen);
+    LinearLayout progress = (LinearLayout) findViewById(R.id.progress);
+
     //playing pieces
     char pieceToPlay;
     Boolean isPlayingPiece = false;
     Boolean firstPiece = true;
-    Boolean illegalMove = false;
 
     OriginalBoardTiles [] originalIDs = new OriginalBoardTiles[7];
     OriginalRack [] originalRack = new OriginalRack[7];
@@ -64,6 +84,7 @@ public class GameScreen extends AppCompatActivity {
         getSupportActionBar().setHomeButtonEnabled(false);
 
         Intent intent = getIntent();
+        myName = intent.getStringExtra("NAME");
         String playerFlag = intent.getStringExtra("PLAYER");
         if(playerFlag.equals("SET"))
         {
@@ -89,19 +110,15 @@ public class GameScreen extends AppCompatActivity {
         piecesGrid.setAdapter(pieceAdapter);
 
 
-        piecesGrid.setOnItemClickListener(new AdapterView.OnItemClickListener()
-        {
-            public void onItemClick(AdapterView<?> parent, View v, int position, long id)
-            {
+        piecesGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                 int x = position % 15;
                 int y = position / 15;
-                if(!isPlayingPiece) {
+                if (!isPlayingPiece) {
 
                     Toast.makeText(getApplicationContext(), "(" + x + "," + y + ")", Toast.LENGTH_SHORT).show();
-                }
-                else {
-                    if (legal(x,y) || firstPiece)
-                    {
+                } else {
+                    if (legal(x, y) || firstPiece) {
                         firstPiece = false;
                         originalIDs[playingCount] = new OriginalBoardTiles(pieceAdapter.squareIDs[position], position);
                         playingCount++;
@@ -111,17 +128,65 @@ public class GameScreen extends AppCompatActivity {
                         pieceAdapter.squareIDs[position] = imageId;
                         piecesGrid.setAdapter(pieceAdapter);
                         board.set(x, y);
-                        cellSetters.add(new CellSetter(pieceToPlay, new Point(x, y), (pieceToPlay == ' ')));
+                        cellSetters.add(new CellSetter(pieceToPlay, x,y, (pieceToPlay == ' ')));
                         isPlayingPiece = false;
-                    }
-                    else
-                    {
+                    } else {
                         Toast.makeText(getApplicationContext(), "Must be linked to another tile", Toast.LENGTH_SHORT).show();
                     }
                 }
-           }
+            }
         });
+
+        initializePlayers = new InitializePlayers(packet);
+        initializePlayers.execute((Void) null);
     }
+
+    private void showProgress(final boolean show) {
+        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
+        // for very easy animations. If available, use these APIs to fade-in
+        // the progress spinner.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+
+            gameScreen.setVisibility(show ? View.GONE : View.VISIBLE);
+            gameScreen.animate().setDuration(shortAnimTime).alpha(
+                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    gameScreen.setVisibility(show ? View.GONE : View.VISIBLE);
+                }
+            });
+
+            progress.setVisibility(show ? View.VISIBLE : View.GONE);
+            progress.animate().setDuration(shortAnimTime).alpha(
+                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    progress.setVisibility(show ? View.VISIBLE : View.GONE);
+                }
+            });
+        } else {
+            // The ViewPropertyAnimator APIs are not available, so simply show
+            // and hide the relevant UI components.
+            progress.setVisibility(show ? View.VISIBLE : View.GONE);
+            gameScreen.setVisibility(show ? View.GONE : View.VISIBLE);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_SPACE_REPLACEMENT && resultCode == Activity.RESULT_OK)
+        {
+            String s = data.getStringExtra("character");
+            Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT).show();
+        }
+        if(requestCode == REQUEST_SPACE_REPLACEMENT && resultCode== Activity.RESULT_CANCELED)
+        {
+            Toast.makeText(getApplicationContext(), "Cancelled", Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
 
     public boolean legal(int x,int y)
     {
@@ -148,6 +213,7 @@ public class GameScreen extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(0, 1, 0, "Send");
         menu.add(0, 2, 0, "Clear Move");
+        menu.add(0, 3, 0, "Test Space Replcament");
         return true;
     }
 
@@ -163,6 +229,23 @@ public class GameScreen extends AppCompatActivity {
         {
             String finalWord = builder.toString();
             Toast.makeText(getApplicationContext(), finalWord, Toast.LENGTH_SHORT).show();
+
+            CellSetter [] array = new CellSetter [cellSetters.size()];
+            for(int i = 0; i< array.length; i++)
+            {
+                array[i] = cellSetters.get(i);
+            }
+
+            XmlConverter converter = XmlConverter.newInstance();
+            Packet p = new Packet(array,myName);
+            try {
+                String data = converter.marshall(p, Packet.class);
+                GameClient.sendData(data);
+            }
+            catch (Exception e)
+            {
+
+            }
         }
 
         else if (id == 2)
@@ -175,6 +258,12 @@ public class GameScreen extends AppCompatActivity {
             {
                 Toast.makeText(getApplicationContext(), "Place piece first!", Toast.LENGTH_SHORT).show();
             }
+        }
+
+        else if(id == 3)
+        {
+            Intent intent = new Intent(this,SpaceReplacement.class);
+            startActivityForResult(intent, REQUEST_SPACE_REPLACEMENT);
         }
 
         return true;
@@ -220,6 +309,10 @@ public class GameScreen extends AppCompatActivity {
             if (!tileUsed[index]) {
                 ImageView imageView = (ImageView) findViewById(view.getId());
                 pieceToPlay = chars[index];
+                if(pieceToPlay == ' ')
+                {
+                    getSpaceReplacement();
+                }
                 tileUsed[index] = true;
                 originalRack[playingCount] = new OriginalRack(imageView, view.getId(), pieceToPlay);
                 imageView.setImageResource(R.drawable.nothing);
@@ -232,9 +325,107 @@ public class GameScreen extends AppCompatActivity {
         }
     }
 
-    public void evaluateData(String data)
+    public void updateTiles(char [] tiles)
     {
-        String decodedData = GameClient.decodeData(data);
+
+
+        ImageView image = (ImageView) findViewById(R.id.piece_1);
+        Context context = image.getContext();
+        int imageId = context.getResources().getIdentifier(tiles[0] + "", "drawable", context.getPackageName());
+        image.setImageResource(imageId);
+
+        for(int i = 0; i < tiles.length; i++)
+        {
+            imageId = context.getResources().getIdentifier(tiles[i] + "", "drawable", context.getPackageName());
+            image.setImageResource(imageId);
+        }
+    }
+
+    public void updateScores(int [] scores)
+    {
+        TextView player1 = (TextView) findViewById(R.id.player1);
+        TextView player2 = (TextView) findViewById(R.id.player2);
+        TextView player3 = (TextView) findViewById(R.id.player3);
+        TextView player4 = (TextView) findViewById(R.id.player4);
+
+        player1.setText(names[0]+": " + scores[0]);
+        player2.setText(names[1]+": " + scores[1]);
+        player3.setText(names[2] + ": " + scores[2]);
+        player4.setText(names[3] + ": " + scores[3]);
+
+
+    }
+
+    public void initialSetup(Packet packet)
+    {
+        String [] players = packet.players;
+        char [] rack = packet.rack;
+        TextView player1 = (TextView) findViewById(R.id.player1);
+        TextView player2 = (TextView) findViewById(R.id.player2);
+        TextView player3 = (TextView) findViewById(R.id.player3);
+        TextView player4 = (TextView) findViewById(R.id.player4);
+
+        player1.setText(names[0]+": 0");
+        player2.setText(names[1]+": 0");
+        player3.setText(names[2]+": 0");
+        player4.setText(names[3]+": 0");
+
+
+        ImageView image = (ImageView) findViewById(R.id.piece_1);
+        Context context = image.getContext();
+        int imageId = context.getResources().getIdentifier(rack[0] + "", "drawable", context.getPackageName());
+        image.setImageResource(imageId);
+
+        for(int i = 0; i < rack.length; i++)
+        {
+            imageId = context.getResources().getIdentifier(rack[i] + "", "drawable", context.getPackageName());
+            image.setImageResource(imageId);
+        }
+
+        if(myName.equals(packet.curentPlayer))
+        {
+            myTurn = true;
+        }
+        else
+        {
+            myTurn = false;
+        }
+    }
+
+
+    public void evaluateData(Packet packet, boolean isUpdate)
+    {
+        if(isUpdate)
+        {
+            if(packet.playerTurn.equals(packet.curentPlayer))
+            {
+                Toast.makeText(getApplicationContext(), "You made an invalid move!", Toast.LENGTH_SHORT).show();
+                updateTiles(packet.tiles);
+                updateScores(packet.scores);
+            }
+        }
+        else
+        {
+            Context context = getApplicationContext();
+            CellSetter [] setters = packet.tileMove;
+            for(int i = 0; i < setters.length; i++)
+            {
+                board.set(setters[i].postion.x, setters[i].postion.y);
+                if(setters[i].character == ' ')
+                    setters[i].character = '*';
+                int imageId = context.getResources().getIdentifier(setters[i].character + "", "drawable", context.getPackageName());
+                int index = setters[i].postion.x * 15 + setters[i].postion.y;
+                pieceAdapter.squareIDs[index] = imageId;
+            }
+
+            piecesGrid.setAdapter(pieceAdapter);
+        }
+    }
+
+    public void getSpaceReplacement()
+    {
+        Intent intent = new Intent(this,SpaceReplacement.class);
+        startActivityForResult(intent, RESULT_OK);
     }
 
     private class OriginalBoardTiles
@@ -263,34 +454,30 @@ public class GameScreen extends AppCompatActivity {
         }
     }
 
-    private class CellSetter
-    {
-        char character;
-        Point position;
-        boolean isSpace;
+    public class InitializePlayers extends AsyncTask<Void, Void, Boolean> {
 
-        private CellSetter(char character,Point position,boolean isSpace)
-        {
-            this.character = character;
-            this.position = position;
-            this.isSpace = isSpace;
-        }
-    }
-
-    //wait on data from server
-    public class PacketWait extends AsyncTask<Void, Void, Boolean> {
-
+        XmlConverter converter = XmlConverter.newInstance();
         String data;
-        PacketWait(){}
+        Packet packet;
+        InitializePlayers(Packet packet){
+            this.packet = packet;
+        }
 
         @Override
         protected Boolean doInBackground(Void... params)
         {
-            data = GameClient.receiveData();
-            if(!data.equals(null))
-                return true;
-            else
+            try {
+                data = GameClient.receiveData();
+                if (!data.equals(null)) {
+                    packet = converter.unmarshall(data, Packet.class);
+                    initialSetup(packet);
+                    return true;
+                } else
+                    return false;
+            }
+            catch (JAXBException | RuntimeException e) {
                 return false;
+            }
         }
 
         @Override
@@ -298,7 +485,7 @@ public class GameScreen extends AppCompatActivity {
         {
             if (success)
             {
-                evaluateData(data);
+                showProgress(false);
             }
 
             else
@@ -308,8 +495,61 @@ public class GameScreen extends AppCompatActivity {
         }
 
         @Override
-        protected void onCancelled() {
+        protected void onCancelled()
+        {
+            showProgress(false);
+        }
+    }
 
+    //wait on data from server
+    public class PacketWait extends AsyncTask<Void, Void, Boolean> {
+
+        XmlConverter converter = XmlConverter.newInstance();
+        String data;
+        String moves;
+        Packet packet;
+        PacketWait(Packet packet){
+            this.packet = packet;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params)
+        {
+            try {
+                data = GameClient.receiveData();
+                moves = GameClient.receiveData();
+                if (!data.equals(null)) {
+                    packet = converter.unmarshall(data, Packet.class);
+                    evaluateData(packet, true);
+                    packet = converter.unmarshall(moves, Packet.class);
+                    evaluateData(packet, false);
+                    return true;
+                } else
+                    return false;
+            }
+            catch (JAXBException | RuntimeException e) {
+                return false;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success)
+        {
+            if (success)
+            {
+                showProgress(false);
+            }
+
+            else
+            {
+                onCancelled();
+            }
+        }
+
+        @Override
+        protected void onCancelled()
+        {
+            showProgress(false);
         }
     }
 
