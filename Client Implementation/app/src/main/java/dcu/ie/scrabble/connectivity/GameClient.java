@@ -57,6 +57,7 @@ public class GameClient
     public static synchronized boolean sendData(String data)
     {
         //send the specied socket the data required
+        output.println(data);
         return true;
     }
 
