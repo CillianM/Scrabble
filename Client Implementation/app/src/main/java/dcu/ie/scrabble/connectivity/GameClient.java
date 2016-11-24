@@ -23,14 +23,14 @@ public class GameClient
     public static synchronized void setup(String serverAddress,String name)
     {
         //instantiate the game client with the specified server adderss
-        /*try
+        try
         {
             serverSocket = new Socket(serverAddress, 7777);
             output = new PrintWriter(serverSocket.getOutputStream(), true);
             input = new BufferedReader(new InputStreamReader(serverSocket.getInputStream()));
 
-            String tmp = input.readLine();
             output.println(name);
+            String tmp = input.readLine();
 
             if(tmp.equals("player"))
             {
@@ -44,8 +44,7 @@ public class GameClient
         catch(IOException e)
         {
 
-        }*/
-        isPlayer = true;
+        }
     }
 
     public static synchronized boolean isPlayer()

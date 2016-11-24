@@ -3,6 +3,7 @@ package dcu.ie.scrabble;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 
@@ -26,6 +27,8 @@ public class ConnectionActivity extends AppCompatActivity {
     private AutoCompleteTextView nameView;
     private View mProgressView;
     private View mLoginFormView;
+
+    boolean Cont = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,28 +82,9 @@ public class ConnectionActivity extends AppCompatActivity {
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
-            mAuthTask = new UserLoginTask(name);
+            mAuthTask = new UserLoginTask(this,name);
             mAuthTask.execute((Void) null);
         }
-    }
-
-    private void startGame(boolean player)
-    {
-
-        Intent intent = new Intent(this,GameScreen.class);
-
-        if(player)
-        {
-            intent.putExtra("PLAYER","SET");
-            intent.putExtra("NAME",nameView.getText().toString());
-        }
-        else
-        {
-            intent.putExtra("PLAYER","NULL");
-        }
-
-        startActivity(intent);
-        finish();
     }
 
     private boolean isNameValid(String name) {
@@ -148,10 +132,11 @@ public class ConnectionActivity extends AppCompatActivity {
 
         private final String name;
         private boolean isPlayer;
+        private Context context;
 
-        UserLoginTask(String name)
+        UserLoginTask(Context context, String name)
         {
-
+            this.context = context;
             this.name = name;
 
         }
@@ -162,7 +147,7 @@ public class ConnectionActivity extends AppCompatActivity {
 
             try
             {
-                GameClient.setup("192.168.10.1", name);
+                GameClient.setup("192.168.0.143", name);
                 isPlayer = GameClient.isPlayer();
             }
 
@@ -177,10 +162,22 @@ public class ConnectionActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(final Boolean success) {
             mAuthTask = null;
-            showProgress(false);
 
-            if (success) {
-                startGame(isPlayer);
+            if (success)
+            {
+                Intent intent = new Intent(context,GameScreen.class);
+
+                if(isPlayer)
+                {
+                    intent.putExtra("PLAYER","SET");
+                    intent.putExtra("NAME",name);
+                }
+                else
+                {
+                    intent.putExtra("PLAYER","NULL");
+                }
+
+                startActivity(intent);
             }
 
             else
