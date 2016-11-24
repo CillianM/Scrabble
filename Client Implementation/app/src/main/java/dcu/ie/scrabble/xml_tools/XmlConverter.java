@@ -1,9 +1,8 @@
 package dcu.ie.scrabble.xml_tools;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import java.io.StringReader;
 import java.io.StringWriter;
+import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.core.Persister;
 
 public class XmlConverter
 {
@@ -15,18 +14,33 @@ public class XmlConverter
         return new XmlConverter();
     }
 
-    public <T> String marshall(T instance, Class<T> cls) throws JAXBException
+    public <T> String marshall(T instance, Class<T> cls)
     {
-        StringWriter writer = new StringWriter();
-        JAXBContext cntxt = JAXBContext.newInstance(cls);
-        cntxt.createMarshaller().marshal(instance, writer);
-        return writer.toString();
+        try {
+            Serializer serializer = new Persister();
+            StringWriter writer = new StringWriter();
+            serializer.write(instance, writer);
+            return writer.toString();
+        }
+        catch (Exception e)
+        {
+            return null;
+        }
+
+
     }
 
-    public <T> T unmarshall(String xml, Class<T> cls) throws JAXBException
+    public <T> T unmarshall(String xml, Class<T> cls)
     {
-        JAXBContext cntxt = JAXBContext.newInstance(cls);
-        Object obj = cntxt.createUnmarshaller().unmarshal(new StringReader(xml));
-        return cls.cast(obj);
+        try
+        {
+            Serializer serializer = new Persister();
+            Object obj = serializer.read(cls, xml);
+            return cls.cast(obj);
+        }
+        catch (Exception e)
+        {
+            return null;
+        }
     }
 }
