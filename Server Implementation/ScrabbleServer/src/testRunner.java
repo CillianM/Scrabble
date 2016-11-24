@@ -16,7 +16,8 @@ public class testRunner
     public static void main(String [] args)
     {
         // BoardReader Tests
-        System.out.println("Starting test BoardReader...");
+        System.out.println("--------------------------------------------------------");
+        System.out.println("Starting tests for BoardReader...");
         Board gameBoard = new Board();
         DictSearch dictionary = new DictSearch();
 
@@ -51,7 +52,7 @@ public class testRunner
 
 
         /*
-        // THIS TEST doesn't
+        // getWordPositions Test1
         gameBoard.setCells(new Point(2,1), new Tile ('Y', letterPoints.get('Y')));
         gameBoard.setCells(new Point(3,1), new Tile ('O', letterPoints.get('O')));
 
@@ -62,7 +63,7 @@ public class testRunner
         */
 
 
-        //THIS TEST DOESN'T
+        //getWordPositions Test2
         gameBoard.setCells(new Point(0,0), new Tile ('H', letterPoints.get('H')));
         gameBoard.setCells(new Point(1,0), new Tile ('E', letterPoints.get('E')));
         gameBoard.setCells(new Point(2,0), new Tile ('L', letterPoints.get('L')));
@@ -71,15 +72,19 @@ public class testRunner
         gameBoard.setCells(new Point(2,2), new Tile ('H', letterPoints.get('H')));
         gameBoard.setCells(new Point(3,2), new Tile ('O', letterPoints.get('O')));
 
+        gameBoard.setCells(new Point(4,4), new Tile ('E', letterPoints.get('E')));
+        gameBoard.setCells(new Point(5,4), new Tile ('A', letterPoints.get('A')));
+        gameBoard.setCells(new Point(6,4), new Tile ('R', letterPoints.get('R')));
+
 
         CellSetter[] lettersPlayed = {new CellSetter('O', 4, 0, false),
                                     new CellSetter('U', 4, 1, false),
                                     new CellSetter('T', 4, 2, false),
                                     new CellSetter('T', 4, 3, false),
-                                    new CellSetter('E', 4, 4, false),
                                     new CellSetter('R', 4, 5, false)};
 
 
+        //getWordPositions test
         ArrayList<WordPosition> wordPos = BoardReader.getWordPositions(lettersPlayed, gameBoard);
 
         //print start positions
@@ -88,7 +93,7 @@ public class testRunner
         {
             System.out.println(wordPos.get(i).toString());
         }
-
+        System.out.println("--------------------------------------------------------");
 
     }
 }
