@@ -15,8 +15,8 @@ public class BoardReader
     {
         //This method gets the starting cells positions and directions for the words in play this turn
 
-        ArrayList<WordPosition> beginningWordPositions = new ArrayList<WordPosition>();
-        ArrayList<WordPosition> otherWordsConnectedPositions = new ArrayList<WordPosition>();
+        ArrayList<WordPosition> beginningOfWords = new ArrayList<WordPosition>();
+        ArrayList<WordPosition> otherWords = new ArrayList<WordPosition>();
 
         boolean isMainWordHorizontal;  //the main word is the word where we check if other words are attached to
         int xModifier, yModifier; // these will be used to move either horizontally or vertically
@@ -24,111 +24,72 @@ public class BoardReader
         //determine the direction of the main word (horizontal or vertical)
         if(playedLetters.length == 1)
         {
-            isMainWordHorizontal = isUpAndDownEmpty(playedLetters[0].position, b);
+            if(upAndDownCellStatus(playedLetters[0].position, playedLetters, b) == 1)
+            {
+                isMainWordHorizontal = true;
+            }
+            else
+            {
+                isMainWordHorizontal = false;
+            }
         }
         else
         {
             isMainWordHorizontal = playedLetters[0].position.getY() == playedLetters[1].position.getY();
         }
 
-        //set direction of travel to find the start of the main word
+        WordPosition searchStartPosition = new WordPosition(playedLetters[0], isMainWordHorizontal);
+        beginningOfWords.add(0,simpleBeginningSeek(playedLetters,b,searchStartPosition));
+
+        //We have found the top of the main word.  Now to move down the word and find the top of any new connecting words.
+
+        //set direction of travel to the end of the main word
         if(isMainWordHorizontal)
         {
-            //set direction of travel to left horizontally
-            xModifier = -1;
-            yModifier = 0;
-        }
-        else
-        {
-            //set direction of travel to up vertically
-            xModifier = 0;
-            yModifier = -1;
-        }
-
-        //The initial current position
-        Point currentPos = playedLetters[0].position;
-        //The initial next position
-        Point nextPos = new Point((int) (currentPos.getX() + xModifier), (int)(currentPos.getY() + yModifier));
-
-        while(!isCellEmpty(nextPos, playedLetters ,b))
-        {
-            if(isMainWordHorizontal)
-            {
-                if(!isUpAndDownEmpty(currentPos, b))
-                {
-                    otherWordsConnectedPositions.add(new WordPosition(currentPos, !isMainWordHorizontal));
-                }
-            }
-            else
-            {
-                if(!isLeftAndRightEmpty(currentPos, b))
-                {
-                    otherWordsConnectedPositions.add(new WordPosition(currentPos, !isMainWordHorizontal));
-                }
-            }
-            currentPos.setLocation(nextPos);
-            nextPos.setLocation((int) (currentPos.getX() + xModifier), (int)(currentPos.getY() + yModifier));
-        }
-
-        //found top, add main word WordPosition to beginningWordPositions
-        beginningWordPositions.add(new WordPosition(currentPos, isMainWordHorizontal));
-
-        //set direction of travel to find the end of the main word
-        if(isMainWordHorizontal)
-        {
-            //set direction of travel to left horizontally
+            //set direction of travel to right horizontally
             xModifier = 1;
             yModifier = 0;
         }
         else
         {
-            //set direction of travel to up vertically
+            //set direction of travel to down vertically
             xModifier = 0;
             yModifier = 1;
         }
 
-        //The make the curPos = the next cell in the opposite direction of where we started
-        currentPos = new Point((int) (playedLetters[0].position.getX() + xModifier), (int)(playedLetters[0].position.getY() + yModifier));
-        //The next position
-        nextPos = new Point((int) (currentPos.getX() + xModifier), (int)(currentPos.getY() + yModifier));
+        //Set the initial currentPos
+        Point currentPos = beginningOfWords.get(0).getPosition();
 
-        //Do the same as above except this time move to the end of the main word
-        if(!isCellEmpty(currentPos, playedLetters ,b))
+        //now I want to go through the entire word.  If the current tile is a cellSetter, then check for connected word.
+        while(cellStatus(currentPos,playedLetters,b) == 1)
         {
-            while(!isCellEmpty(nextPos, playedLetters ,b))
+            if(tileToBePlacedHere(currentPos,playedLetters))
             {
                 if(isMainWordHorizontal)
                 {
-                    if(!isUpAndDownEmpty(currentPos, b))
+                    if(upAndDownCellStatus(currentPos,playedLetters,b) == 1)
                     {
-                        otherWordsConnectedPositions.add(new WordPosition(currentPos, !isMainWordHorizontal));
+                        otherWords.add(new WordPosition(new Point(currentPos),!isMainWordHorizontal));
                     }
                 }
                 else
                 {
-                    if(!isLeftAndRightEmpty(currentPos, b))
-                    {
-                        otherWordsConnectedPositions.add(new WordPosition(currentPos, !isMainWordHorizontal));
-                    }
+                     if(leftAndRightCellStatus(currentPos,playedLetters,b) == 1)
+                     {
+                         otherWords.add(new WordPosition(new Point(currentPos),!isMainWordHorizontal));
+                     }
                 }
-                currentPos.setLocation(nextPos);
-                nextPos.setLocation((int) (currentPos.getX() + xModifier), (int)(currentPos.getY() + yModifier));
             }
+
+            currentPos.setLocation((int)(currentPos.getX() + xModifier), (int)(currentPos.getY() + yModifier));
         }
 
-        //at this stage we hav found the start of the "main" word, and we have found where "other" words are
-        //connected to the main word.
-        //now for each otherWord we do a simplified seek for just the start of that word, no need to worry
-        //about CellSetters
-        for(int i = 0; i < otherWordsConnectedPositions.size(); i++)
+        for(int i = 0; i < otherWords.size(); i++)
         {
-            WordPosition otherWord = simpleBeginningSeek(playedLetters, b,otherWordsConnectedPositions.get(i));
-            System.out.println("OtherWord Start = " + otherWord.toString());
-            beginningWordPositions.add(otherWord);
+            beginningOfWords.add(simpleBeginningSeek(playedLetters, b,otherWords.get(i)));
         }
 
-        return beginningWordPositions;
-
+        return beginningOfWords;
     }
 
     private static WordPosition simpleBeginningSeek(CellSetter[] playedLetters, Board b ,WordPosition startWP)
@@ -150,89 +111,104 @@ public class BoardReader
 
         //The initial current position
         Point currentPos = startWP.getPosition();
-        System.out.println("Other connected at: " + startWP.toString());
         //The initial next position
         Point nextPos = new Point((int) (currentPos.getX() + xModifier), (int)(currentPos.getY() + yModifier));
 
-        //while(nextPos.getX() >= 0 && nextPos.getY() >=0 && b.getCells(nextPos).getPlacedTile() != null )
-        int i = 0;
-        while(!isCellEmpty(nextPos, playedLetters ,b))
+        while(cellStatus(nextPos, playedLetters ,b) == 1)
         {
-            System.out.println("I'thiteration: " + i);
             currentPos.setLocation(nextPos);
             nextPos.setLocation((int) (currentPos.getX() + xModifier), (int)(currentPos.getY() + yModifier));
-            i++;
         }
 
         //currentPos is the beginning of the word
         return new WordPosition(currentPos, startWP.getIsHorizontal());
     }
 
-    private static boolean isCellEmpty(Point p, CellSetter[] playedLetters, Board b)
+    private static boolean tileToBePlacedHere(Point p, CellSetter[] playedLetters)
     {
-        boolean isEmpty;
-
-        if(p.getX() < 0 || p.getY() < 0 || p.getX() > 14 || p.getY() > 14)
-        {
-            isEmpty = true; //a position off of the board is considered empty
-        }
-        else
-        {
-            isEmpty = b.getCells(p).getPlacedTile() == null;
-        }
-
+        //Checks if a cellSetter is to set a tile in this position
         for(int i = 0; i < playedLetters.length; i++)
         {
             if(p.equals(playedLetters[i].position))
+                return true;
+        }
+        return false;
+    }
+
+    private static int cellStatus(Point p, CellSetter[] playedLetters, Board b)
+    {
+        int status;
+
+        if(p.getX() < 0 || p.getY() < 0 || p.getX() > 14 || p.getY() > 14)
+        {
+            status = -1; // status -1 = position off of the board
+        }
+        else
+        {
+            if(b.getCells(p).getPlacedTile() != null)
             {
-                isEmpty = false;
+                status = 1; // status 1 = has tile
+            }
+            else
+            {
+                status = 0; // status 0 = has no tile
             }
         }
 
-        return isEmpty;
+        //loop through each of the tiles to be played and see if they will be placed in the current cell
+        //if so, then consider the cell as having a tile
+        if(tileToBePlacedHere(p,playedLetters))
+        {
+            status = 1;
+        }
+        return status;
     }
 
-    private static boolean isLeftAndRightEmpty(Point p, Board b)
+    private static int leftAndRightCellStatus(Point p, CellSetter[] playedLetters, Board b)
     {
-        //definition of empty is that the position on the left or right
-        //does not have a tile onject.  Beyond the edge of the board is
-        // considered to be empty
-        boolean leftEmpty = true;
-        boolean rightEmpty = true;
 
-        if(p.getX() - 1 >= 0)
+        int leftStatus;
+        int rightStatus;
+        Point leftPoint = new Point((int) (p.getX()-1), (int) p.getY());
+        Point rightPoint = new Point((int) (p.getX()+1), (int) p.getY());
+
+        leftStatus = cellStatus(leftPoint, playedLetters, b);
+        rightStatus = cellStatus(rightPoint, playedLetters, b);
+
+        //If either the left or right status is 1 (i.e has cell) then the function will return 1
+        // else return 0 (no tile).  We don't care if either left or right is off the board, we just want
+        // to know if they have tiles.
+        if(leftStatus == 1 || rightStatus == 1)
         {
-            Point leftPoint = new Point((int) (p.getX()-1), (int) p.getY());
-            leftEmpty = b.getCells(leftPoint).getPlacedTile() == null;
+            return 1;
         }
-
-        if(p.getX() + 1 <= 14)
+        else
         {
-            Point rightPoint = new Point((int) (p.getX()+1), (int) p.getY());
-            rightEmpty = b.getCells(rightPoint).getPlacedTile() == null;
+            return 0;
         }
-
-        return leftEmpty && rightEmpty;
     }
 
-    private static boolean isUpAndDownEmpty(Point p, Board b)
+    private static int upAndDownCellStatus(Point p, CellSetter[] playedLetters, Board b)
     {
-        boolean upEmpty = true;
-        boolean downEmpty = true;
+        int upStatus;
+        int downStatus;
+        Point upPoint = new Point((int) (p.getX()), (int) p.getY() -1);
+        Point downPoint = new Point((int) (p.getX()), (int) p.getY() +1);
 
-        if(p.getY() - 1 >= 0)
+        upStatus = cellStatus(upPoint, playedLetters, b);
+        downStatus = cellStatus(downPoint, playedLetters, b);
+
+        //If either the up or down status is 1 (i.e has tile) then the function will return 1
+        // else return 0 (no tile).  We don't care if either up or down is off the board, we just want
+        // to know if they have tiles.
+        if(upStatus == 1 || downStatus == 1)
         {
-            Point upPoint = new Point((int) p.getX(), (int) (p.getY() - 1));
-            upEmpty = b.getCells(upPoint).getPlacedTile() == null;
+            return 1;
         }
-
-        if(p.getY() + 1 <= 14)
+        else
         {
-            Point downPoint = new Point((int) (p.getX()), (int) (p.getY() + 1));
-            downEmpty = b.getCells(downPoint).getPlacedTile() == null;
+            return 0;
         }
-
-        return upEmpty && downEmpty;
     }
 
 }

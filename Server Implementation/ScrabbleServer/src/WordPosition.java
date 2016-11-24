@@ -25,7 +25,11 @@ public class WordPosition
     }
 
     public CellSetter getCellSetter() {return startCell;}
-    public Point getPosition(){return position;}
+    public Point getPosition()
+    {
+        //We return a new point to avoid pass by reference vs pass by value errors
+        return new Point((int)position.getX(), (int)position.getY());
+    }
     public boolean getIsHorizontal(){return isHorizontal;}
 
     public String toString()
