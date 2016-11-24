@@ -134,10 +134,18 @@ public class GameServer
         }
     }
 
-    public boolean validateMove(String word)
+    public boolean validateMove(CellSetter[] letterArray)
     {
-        //check if the word is legal
-        return dictionary.search(word);
+        //get all words created in this move and check if they are in the dictionary
+        String[] words = BoardReader.getWords(lettersPlayed, gameBoard);
+        for(int i = 0; i < words.length; i++)
+        {
+            if(!dictionary.search(words[i]))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     public boolean checkConnections()

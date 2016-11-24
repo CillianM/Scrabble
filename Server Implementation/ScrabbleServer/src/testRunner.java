@@ -15,6 +15,7 @@ public class testRunner
 
     public static void main(String [] args)
     {
+
         // BoardReader Tests
         System.out.println("--------------------------------------------------------");
         System.out.println("Starting tests for BoardReader...");
@@ -86,13 +87,32 @@ public class testRunner
 
         //getWordPositions test
         ArrayList<WordPosition> wordPos = BoardReader.getWordPositions(lettersPlayed, gameBoard);
-
-        //print start positions
         System.out.println("The starting positions for words played this turn are: ");
         for(int i = 0; i < wordPos.size(); i++)
         {
             System.out.println(wordPos.get(i).toString());
         }
+
+        //getWords test
+
+        String[] words = BoardReader.getWords(lettersPlayed, gameBoard);
+        boolean isWordsValid = true;
+        System.out.println("\nThe words played this turn are: ");
+        for(int j = 0; j < words.length; j++)
+        {
+            System.out.print(words[j]);
+            if(!dictionary.search(words[j]))
+            {
+                System.out.println(" :which is not in the dictionary.");
+                isWordsValid = false;
+            }
+            else
+            {
+                System.out.println(" :which is in the dictionary.");
+            }
+        }
+        System.out.println("All words are valid = " + isWordsValid);
+
         System.out.println("--------------------------------------------------------");
 
     }
