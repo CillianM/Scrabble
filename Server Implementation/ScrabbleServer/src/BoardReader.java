@@ -4,11 +4,71 @@ public class BoardReader
 {
 
 
-    //when validating, assume the tiles have not been placed, so if the coordinates of the tile
-    //matches one of the cell setters, take the info from the cell setter, not the current cell
+
 
     //when getting score, all tiles will be placed.  If the current cell coordinated match a cell setter, then
     //set the cell's multiplier used when calculating the score
+
+
+    //when getting words, assume the tiles have not been placed, so if the coordinates of the tile
+    //matches one of the cell setters, take the info from the cell setter, not the current cell
+    public static String[] getWords(CellSetter[] playedLetters, Board b)
+    {
+        ArrayList<WordPosition> wordPositions = getWordPositions(playedLetters,b);
+        String[] words = new String[wordPositions.size()];
+
+        for(int i = 0; i < wordPositions.size(); i++)
+        {
+            words[i] = getSingleWord(wordPositions.get(i), playedLetters, b);
+        }
+
+        return words;
+    }
+
+    private static String getSingleWord(WordPosition wp,CellSetter[] playedLetters, Board b)
+    {
+        String word = "";
+        int xModifier, yModifier;
+        if(wp.getIsHorizontal())
+        {
+            //set direction of travel to right horizontally
+            xModifier = 1;
+            yModifier = 0;
+        }
+        else
+        {
+            //set direction of travel to down vertically
+            xModifier = 0;
+            yModifier = 1;
+        }
+
+        //Set the initial currentPos
+        Point currentPos = wp.getPosition();
+
+        //iterate through the word
+        while(cellStatus(currentPos,playedLetters,b) == 1)
+        {
+            if(b.getCells(currentPos).getPlacedTile() == null) //tile hasn't been placed yet, get value from a CellSetter
+            {
+                for(int i = 0; i < playedLetters.length; i++)
+                {
+                    if(currentPos.equals(playedLetters[i].position))
+                    {
+                        word += playedLetters[i].character;
+                        break;
+                    }
+                }
+            }
+            else //the tile is placed, so get value directly
+            {
+                word += b.getCells(currentPos).getPlacedTile().getLetter();
+            }
+
+            currentPos.setLocation((int)(currentPos.getX() + xModifier), (int)(currentPos.getY() + yModifier));
+        }
+
+        return word;
+    }
 
 
     public static ArrayList<WordPosition> getWordPositions(CellSetter[] playedLetters, Board b)
