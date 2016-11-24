@@ -41,7 +41,8 @@ public class GameServer
             try
             {
                 clientSocket = serverSocket.accept();
-                if(clientCount != 4 )
+                //if game isn't already in progress add players
+                if(!checkConnections(clientThreads))
                 {
                     for(int i = 0; i < clientThreads.length; i++)
                     {
@@ -64,6 +65,7 @@ public class GameServer
 
                 }
             }
+
             catch(IOException e)
             {
                 System.out.println(e);
@@ -114,7 +116,7 @@ public class GameServer
 
     public static String decodeData(String input)
     {
-
+        //waiting on xml
         return input;
     }
 
@@ -148,9 +150,14 @@ public class GameServer
         return true;
     }
 
-    public boolean checkConnections()
+    public static boolean checkConnections(ClientThread[] clients)
     {
         //check if there is a current game in progress
+        for(int i = 0; i < clients.length; i++)
+        {
+            if (clients[i] == null)
+                return false;
+        }
         return true;
     }
 
@@ -162,8 +169,8 @@ public class GameServer
         private ArrayList<Spectator> spectatorThreads;
         private ClientThread [] threads;
         private String name;
-        private String role;
-        //role signifier
+        private String role;//role signifier
+
         public ClientThread(Socket clientSocket, ClientThread [] threads, ArrayList<Spectator> spectatorThreads)
         {
             this.clientSocket = clientSocket;
@@ -194,9 +201,9 @@ public class GameServer
                 {
                     String line = inputStream.readLine();
                     //decode line
-                    decodeData(line);
+
                     //evaluate using Bernard's masters method. Possibly decode as well. So ^ might be unnecessary
-                    String result = "";
+                    String result = decodeData(line);;
                     for(int i = 0; i < maxClientCount; i++)
                     {
                         if(threads[i] != null && threads[i] != this)
@@ -218,7 +225,7 @@ public class GameServer
 
             catch(IOException e)
             {
-
+                System.out.println(e);
             }
 
 
@@ -243,7 +250,7 @@ public class GameServer
             }
             catch (IOException e)
             {
-
+                System.out.println(e);
             }
         }
     }
