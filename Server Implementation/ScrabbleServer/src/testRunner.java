@@ -85,8 +85,9 @@ public class testRunner
                                     new CellSetter('R', 4, 5, false)};
 
 
-        //getWordPositions test
+        //getWordPositions
         ArrayList<WordPosition> wordPos = BoardReader.getWordPositions(lettersPlayed, gameBoard);
+
         System.out.println("The starting positions for words played this turn are: ");
         for(int i = 0; i < wordPos.size(); i++)
         {
@@ -94,8 +95,7 @@ public class testRunner
         }
 
         //getWords test
-
-        String[] words = BoardReader.getWords(lettersPlayed, gameBoard);
+        String[] words = BoardReader.getWords(lettersPlayed,wordPos ,gameBoard);
         boolean isWordsValid = true;
         System.out.println("\nThe words played this turn are: ");
         for(int j = 0; j < words.length; j++)
@@ -111,7 +111,18 @@ public class testRunner
                 System.out.println(" :which is in the dictionary.");
             }
         }
-        System.out.println("All words are valid = " + isWordsValid);
+        System.out.println("All words are valid = " + isWordsValid + "\n");
+
+        //updateBoard
+        System.out.println("Place letters (yes, even though outter is invalid)");
+        for(int x = 0; x < lettersPlayed.length; x++)
+        {
+            char c = lettersPlayed[x].character;
+            gameBoard.setCells(lettersPlayed[x].position, new Tile(c, letterPoints.get(c)));
+        }
+
+        //getScores test
+        System.out.println("The score for all words = " + BoardReader.getScores(lettersPlayed, wordPos, gameBoard));
 
         System.out.println("--------------------------------------------------------");
 

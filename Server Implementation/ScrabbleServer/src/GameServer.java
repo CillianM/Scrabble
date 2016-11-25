@@ -139,7 +139,7 @@ public class GameServer
     public boolean validateMove(CellSetter[] letterArray)
     {
         //get all words created in this move and check if they are in the dictionary
-        String[] words = BoardReader.getWords(lettersPlayed, gameBoard);
+        String[] words = BoardReader.getWords(letterArray, gameBoard);
         for(int i = 0; i < words.length; i++)
         {
             if(!dictionary.search(words[i]))

@@ -3,18 +3,74 @@ import java.util.ArrayList;
 public class BoardReader
 {
 
-
-
-
     //when getting score, all tiles will be placed.  If the current cell coordinated match a cell setter, then
     //set the cell's multiplier used when calculating the score
+    public static int getScores(CellSetter[] playedLetters, ArrayList<WordPosition> wordPositions ,Board b)
+    {
+        int sum = 0;
+        for(int i = 0; i < wordPositions.size(); i++)
+        {
+            sum += getSingleScore(playedLetters,wordPositions.get(i),b);
+        }
+        return sum;
+    }
+
+    private static int getSingleScore(CellSetter[] playedLetters, WordPosition wp ,Board b)
+    {
+        int sum = 0;
+        int wordMultiplier = 1;
+        int letterMultiplier = 1;
+        int letterPoints = 0;
+        int xModifier, yModifier;
+        if(wp.getIsHorizontal())
+        {
+            //set direction of travel to right horizontally
+            xModifier = 1;
+            yModifier = 0;
+        }
+        else
+        {
+            //set direction of travel to down vertically
+            xModifier = 0;
+            yModifier = 1;
+        }
+        //Set the initial currentPos
+        Point currentPos = wp.getPosition();
+
+        //iterate through the word
+        while(cellStatus(currentPos,playedLetters,b) == 1)
+        {
+            letterPoints = b.getCells(currentPos).getPlacedTile().getPoints();
+            if(!b.getCells(currentPos).getMultiplierUsed())
+            {
+                //set multipliers
+                if(b.getCells(currentPos).getCellType() == 2 ||
+                        b.getCells(currentPos).getCellType() == 4)
+                {
+                    letterMultiplier = b.getCells(currentPos).getMultiplier();
+                }
+                else
+                {
+                    wordMultiplier = wordMultiplier * b.getCells(currentPos).getMultiplier();
+                }
+                //set the cell multiplier as used
+                b.getCells(currentPos).setMultiplierUsed();
+            }
+            sum += (letterPoints * letterMultiplier);
+            letterMultiplier = 1;
+            currentPos.setLocation((int)(currentPos.getX() + xModifier), (int)(currentPos.getY() + yModifier));
+        }
+
+        //mult sum by word mult
+        sum = sum * wordMultiplier;
+        return sum;
+    }
 
 
     //when getting words, assume the tiles have not been placed, so if the coordinates of the tile
     //matches one of the cell setters, take the info from the cell setter, not the current cell
-    public static String[] getWords(CellSetter[] playedLetters, Board b)
+    public static String[] getWords(CellSetter[] playedLetters, ArrayList<WordPosition> wordPositions, Board b)
     {
-        ArrayList<WordPosition> wordPositions = getWordPositions(playedLetters,b);
         String[] words = new String[wordPositions.size()];
 
         for(int i = 0; i < wordPositions.size(); i++)
