@@ -50,6 +50,7 @@ public class GameServer
                             clientThreads[i] = new ClientThread(clientSocket, clientThreads,spectatorThreads);
                             Thread t = new Thread(clientThreads[i]);
                             t.start();
+                            System.out.println("Players "  + (clientCount+1) + " of 4 currently connected");
                             clientCount++;
                             break;
                         }
@@ -57,7 +58,7 @@ public class GameServer
                 }
                 else
                 {
-
+                    //GameServer game = new GameServer();
                     spectatorThreads.add(new Spectator(clientSocket));
                     spectatorCount++;
                     System.out.println("Spectators " + spectatorCount);
@@ -67,7 +68,8 @@ public class GameServer
 
             catch(IOException e)
             {
-                System.out.println(e);
+                System.out.println(e + " at GameServer Main ");
+                e.printStackTrace();
             }
         }
     }
@@ -138,7 +140,7 @@ public class GameServer
         private ClientThread [] threads;
         private String name;
         private String role;//role signifier
-
+        private static int playerNumber = 1;
         public ClientThread(Socket clientSocket, ClientThread [] threads, ArrayList<Spectator> spectatorThreads)
         {
             this.clientSocket = clientSocket;
@@ -151,10 +153,12 @@ public class GameServer
                 this.name = inputStream.readLine();
                 this.role = "player";
                 this.outputStream.println(role);
+                this.outputStream.println("You are player " + playerNumber++ + " waiting on other players");
             }
             catch (IOException e)
             {
-                System.out.println(e);
+                System.out.println(e + " in constructor of ClientThread");
+                e.printStackTrace();
             }
         }
 
@@ -174,7 +178,7 @@ public class GameServer
                     String result = decodeData(line);;
                     for(int i = 0; i < maxClientCount; i++)
                     {
-                        if(threads[i] != null && threads[i] != this)
+                        if(threads[i] != null && threads[i] != this && result != null)
                         {
                             outputStream.println(result);
                         }
@@ -182,7 +186,7 @@ public class GameServer
 
                     for(int i = 0; i < spectatorThreads.size(); i++)
                     {
-                        if(spectatorThreads.get(i) != null && threads[i] != this)
+                        if(spectatorThreads.get(i) != null && threads[i] != this && result != null)
                         {
                             outputStream.println(result);
                         }
@@ -193,7 +197,8 @@ public class GameServer
 
             catch(IOException e)
             {
-                System.out.println(e);
+                System.out.println(e + " in run method of ClientThread");
+                e.printStackTrace();
             }
 
 
@@ -218,7 +223,8 @@ public class GameServer
             }
             catch (IOException e)
             {
-                System.out.println(e);
+                System.out.println(e + " in Spectator creation");
+                e.printStackTrace();
             }
         }
     }
