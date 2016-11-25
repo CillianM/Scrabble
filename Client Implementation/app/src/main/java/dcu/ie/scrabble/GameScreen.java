@@ -70,10 +70,13 @@ public class GameScreen extends AppCompatActivity {
     ArrayList<CellSetter> cellSetters = new ArrayList<>();
 
     Replacement spaceReplacement;
+    boolean wasASpace = false;
 
 
     int playingCount = 0;
     int direction;
+
+    PacketSender sender;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,7 +131,8 @@ public class GameScreen extends AppCompatActivity {
                             pieceAdapter.squareIDs[position] = imageId;
                             piecesGrid.setAdapter(pieceAdapter);
                             board.set(x, y);
-                            cellSetters.add(new CellSetter(pieceToPlay, x, y, (pieceToPlay == ' ')));
+                            cellSetters.add(new CellSetter(pieceToPlay, x, y, wasASpace));
+                            wasASpace = false;
                             isPlayingPiece = false;
                         } else {
                             Toast.makeText(getApplicationContext(), "Must be linked to another tile", Toast.LENGTH_SHORT).show();
@@ -185,6 +189,7 @@ public class GameScreen extends AppCompatActivity {
             String s = data.getStringExtra("character");
 
             pieceToPlay = s.charAt(0);
+            wasASpace = true;
             Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT).show();
         }
         if(requestCode == REQUEST_SPACE_REPLACEMENT && resultCode== Activity.RESULT_CANCELED)
@@ -224,7 +229,6 @@ public class GameScreen extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(0, 1, 0, "Send");
         menu.add(0, 2, 0, "Clear Move");
-        menu.add(0, 3, 0, "Test Space Replcament");
         return true;
     }
 
@@ -238,26 +242,18 @@ public class GameScreen extends AppCompatActivity {
 
         if (id == 1)
         {
+            originalIDs = new OriginalBoardTiles[7];
+            originalRack = new OriginalRack[7];
+            playingCount = 0;
             myTurn = false;
             String finalWord = builder.toString();
             Toast.makeText(getApplicationContext(), finalWord, Toast.LENGTH_SHORT).show();
+            builder = new StringBuilder();
 
-            CellSetter [] array = new CellSetter [cellSetters.size()];
-            for(int i = 0; i< array.length; i++)
-            {
-                array[i] = cellSetters.get(i);
-            }
+            CellSetter [] array = cellSetters.toArray(new CellSetter[cellSetters.size()]);
+            sender = new PacketSender(array);
+            sender.execute((Void) null);
 
-            XmlConverter converter = XmlConverter.newInstance();
-            Packet p = new Packet(array,myName);
-            try {
-                String data = converter.marshall(p, Packet.class);
-                GameClient.sendData(data);
-            }
-            catch (Exception e)
-            {
-
-            }
             wait = new PacketWait(packet);
             wait.execute((Void) null);
         }
@@ -274,11 +270,6 @@ public class GameScreen extends AppCompatActivity {
             }
         }
 
-        else if(id == 3)
-        {
-            Intent intent = new Intent(this,SpaceReplacement.class);
-            startActivityForResult(intent, REQUEST_SPACE_REPLACEMENT);
-        }
 
         return true;
     }
@@ -298,10 +289,15 @@ public class GameScreen extends AppCompatActivity {
                 originalIDs[i] = null;
             }
 
-            if (originalRack[i] != null) {
-
+            if (originalRack[i] != null)
+            {
+                chars[i] = originalRack[i].character;
                 Context context = originalRack[i].view.getContext();
-                int imageId = context.getResources().getIdentifier(originalRack[i].character + "", "drawable", context.getPackageName());
+                int imageId;
+                if(originalRack[i].isSpace)
+                    imageId = context.getResources().getIdentifier("space", "drawable", context.getPackageName());
+                else
+                    imageId = context.getResources().getIdentifier(originalRack[i].character + "", "drawable", context.getPackageName());
                 originalRack[i].view.setImageResource(imageId);
                 originalRack[i] = null;
 
@@ -324,17 +320,18 @@ public class GameScreen extends AppCompatActivity {
                 if (!tileUsed[index]) {
                     ImageView imageView = (ImageView) findViewById(view.getId());
                     pieceToPlay = chars[index];
+                    chars[index] = '#';
                     if (pieceToPlay == ' ') {
                         spaceReplacement = new Replacement(imageView,view.getId(),index);
                         tileUsed[index] = true;
-                        originalRack[playingCount] = new OriginalRack(imageView, view.getId(), pieceToPlay);
+                        originalRack[playingCount] = new OriginalRack(imageView, view.getId(), pieceToPlay,true);
                         imageView.setImageResource(R.drawable.nothing);
                         isPlayingPiece = true;
                         getSpaceReplacement();
                     }
                     else {
                         tileUsed[index] = true;
-                        originalRack[playingCount] = new OriginalRack(imageView, view.getId(), pieceToPlay);
+                        originalRack[playingCount] = new OriginalRack(imageView, view.getId(), pieceToPlay,false);
                         imageView.setImageResource(R.drawable.nothing);
                         isPlayingPiece = true;
                     }
@@ -351,17 +348,61 @@ public class GameScreen extends AppCompatActivity {
 
     public void updateTiles(char [] tiles)
     {
-        chars =tiles;
-
-        ImageView image = (ImageView) findViewById(R.id.piece_1);
-        Context context = image.getContext();
-        int imageId = context.getResources().getIdentifier(tiles[0] + "", "drawable", context.getPackageName());
-        image.setImageResource(imageId);
-
-        for(int i = 0; i < tiles.length; i++)
+        int index = 0;
+        for(int i =0; i <chars.length; i++)
         {
-            imageId = context.getResources().getIdentifier(tiles[i] + "", "drawable", context.getPackageName());
-            image.setImageResource(imageId);
+            if(chars[i] == '#')
+            {
+                chars[i] = tiles[index];
+                index++;
+            }
+        }
+
+        setTiles(chars);
+    }
+
+    public void setTiles(char [] tiles)
+    {
+        try {
+            ImageView image1 = (ImageView) findViewById(R.id.piece_0);
+            ImageView image2 = (ImageView) findViewById(R.id.piece_1);
+            ImageView image3 = (ImageView) findViewById(R.id.piece_2);
+            ImageView image4 = (ImageView) findViewById(R.id.piece_3);
+            ImageView image5 = (ImageView) findViewById(R.id.piece_4);
+            ImageView image6 = (ImageView) findViewById(R.id.piece_5);
+            ImageView image7 = (ImageView) findViewById(R.id.piece_6);
+            Context context = image1.getContext();
+            int imageId;
+
+            for (int i = 0; i < tiles.length; i++) {
+                ImageView image;
+                if (i == 0) {
+                    image = image1;
+                } else if (i == 1) {
+                    image = image2;
+                } else if (i == 2) {
+                    image = image3;
+                } else if (i == 3) {
+                    image = image4;
+                } else if (i == 4) {
+                    image = image5;
+                } else if (i == 5) {
+                    image = image6;
+                } else {
+                    image = image7;
+                }
+                if (tiles[i] == ' ')
+                    imageId = context.getResources().getIdentifier("space", "drawable", context.getPackageName());
+                else
+                    imageId = context.getResources().getIdentifier(tiles[i] + "", "drawable", context.getPackageName());
+                image.setImageResource(imageId);
+            }
+
+            tileUsed = new boolean[]{false,false,false,false,false,false,false,false};
+        }
+        catch (Exception e)
+        {
+            System.out.println(e);
         }
     }
 
@@ -413,58 +454,11 @@ public class GameScreen extends AppCompatActivity {
         player4.setText(names[3]+": 0");
 
 
-        ImageView image1 = (ImageView) findViewById(R.id.piece_0);
-        ImageView image2 = (ImageView) findViewById(R.id.piece_1);
-        ImageView image3 = (ImageView) findViewById(R.id.piece_2);
-        ImageView image4 = (ImageView) findViewById(R.id.piece_3);
-        ImageView image5 = (ImageView) findViewById(R.id.piece_4);
-        ImageView image6 = (ImageView) findViewById(R.id.piece_5);
-        ImageView image7 = (ImageView) findViewById(R.id.piece_6);
-        Context context = image1.getContext();
-        int imageId;
-
-        for(int i = 0; i < rack.length; i++)
-        {
-            ImageView image;
-            if(i == 0)
-            {
-                image = image1;
-            }
-            else if (i == 1)
-            {
-                image = image2;
-            }
-            else if (i == 2)
-            {
-                image = image3;
-            }
-            else if (i == 3)
-            {
-                image = image4;
-            }
-            else if (i == 4)
-            {
-                image = image5;
-            }
-            else if (i == 5)
-            {
-                image = image6;
-            }
-            else
-            {
-                image = image7;
-            }
-            if(rack[i] == ' ')
-                imageId = context.getResources().getIdentifier("space", "drawable", context.getPackageName());
-            else
-                imageId = context.getResources().getIdentifier(rack[i] + "", "drawable", context.getPackageName());
-            image.setImageResource(imageId);
-        }
+        setTiles(rack);
 
         if(myName.equals(packet.currentPlayer))
         {
             myTurn = true;
-            Toast.makeText(getApplicationContext(), "Your turn!", Toast.LENGTH_SHORT).show();
         }
         else
         {
@@ -477,19 +471,19 @@ public class GameScreen extends AppCompatActivity {
     {
         if(isUpdate)
         {
-            if(packet.playerTurn.equals(packet.currentPlayer))
+            if(packet.playerTurn.equals(packet.currentPlayer) && packet.playerTurn.equals(myName))
             {
-                Toast.makeText(getApplicationContext(), "You made an invalid move! Your turn again!", Toast.LENGTH_SHORT).show();
                 myTurn = true;
 
             }
             else if(packet.playerTurn.equals(myName))
             {
-                Toast.makeText(getApplicationContext(), "Your turn!", Toast.LENGTH_SHORT).show();
                 myTurn = true;
 
             }
-            myTurn = false;
+            else {
+                myTurn = false;
+            }
             updateTiles(packet.tiles);
             updateScores(packet.scores);
 
@@ -498,27 +492,41 @@ public class GameScreen extends AppCompatActivity {
             TextView player3 = (TextView) findViewById(R.id.player3);
             TextView player4 = (TextView) findViewById(R.id.player4);
 
+            int scrabbleRed = getResources().getColor(R.color.scrabble_red);
+
             if(names[0].equals(packet.playerTurn))
             {
                 player1.setTextColor(Color.GREEN);
+                player2.setTextColor(Color.rgb(164,54,55));
+                player3.setTextColor(Color.rgb(164,54,55));
+                player4.setTextColor(Color.rgb(164,54,55));
             }
             else if(names[1].equals(packet.playerTurn))
             {
+                player1.setTextColor(Color.rgb(164,54,55));
                 player2.setTextColor(Color.GREEN);
+                player3.setTextColor(Color.rgb(164,54,55));
+                player4.setTextColor(Color.rgb(164,54,55));
             }
             else if(names[2].equals(packet.playerTurn))
             {
+                player1.setTextColor(Color.rgb(164,54,55));
+                player2.setTextColor(Color.rgb(164,54,55));
                 player3.setTextColor(Color.GREEN);
+                player4.setTextColor(Color.rgb(164,54,55));
             }
             else
             {
+                player1.setTextColor(Color.rgb(164,54,55));
+                player2.setTextColor(Color.rgb(164,54,55));
+                player3.setTextColor(Color.rgb(164,54,55));
                 player4.setTextColor(Color.GREEN);
             }
         }
         else
         {
             Context context = getApplicationContext();
-            CellSetter [] setters = packet.tileMove;
+            CellSetter [] setters = packet.deSerializeCellSetter(packet.cellSetterStrings);
             for(int i = 0; i < setters.length; i++)
             {
                 board.set(setters[i].postion.x, setters[i].postion.y);
@@ -558,12 +566,14 @@ public class GameScreen extends AppCompatActivity {
         int id;
         char character;
         ImageView view;
+        boolean isSpace;
 
-        private OriginalRack(ImageView view, int id, char character)
+        private OriginalRack(ImageView view, int id, char character,boolean isSpace)
         {
             this.view = view;
             this.id = id;
             this.character = character;
+            this.isSpace = isSpace;
         }
     }
 
@@ -635,9 +645,11 @@ public class GameScreen extends AppCompatActivity {
         XmlConverter converter = XmlConverter.newInstance();
         String data;
         String moves;
-        Packet packet;
+        Packet dataPacket;
+        Packet movePacket;
         PacketWait(Packet packet){
-            this.packet = packet;
+            this.dataPacket = packet;
+            this.movePacket = packet;
         }
 
         @Override
@@ -647,15 +659,64 @@ public class GameScreen extends AppCompatActivity {
                 data = GameClient.receiveData();
                 moves = GameClient.receiveData();
                 if (!data.equals(null)) {
-                    packet = converter.unmarshall(data, Packet.class);
-                    evaluateData(packet, true);
-                    packet = converter.unmarshall(moves, Packet.class);
-                    evaluateData(packet, false);
+                    dataPacket = converter.unmarshall(data, Packet.class);
+                    movePacket = converter.unmarshall(moves, Packet.class);
                     return true;
                 } else
                     return false;
             }
             catch (RuntimeException e) {
+                return false;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success)
+        {
+            if (success)
+            {
+                if(dataPacket != null)
+                    evaluateData(dataPacket, true);
+                if(movePacket != null)
+                    evaluateData(movePacket, false);
+            }
+
+            else
+            {
+                onCancelled();
+            }
+        }
+
+        @Override
+        protected void onCancelled()
+        {
+            showProgress(false);
+        }
+    }
+
+    public class PacketSender extends AsyncTask<Void, Void, Boolean> {
+
+        XmlConverter converter = XmlConverter.newInstance();
+        CellSetter [] array;
+        PacketSender(CellSetter [] array)
+        {
+            this.array = array;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params)
+        {
+
+            Packet p = new Packet(array,myName);
+            try {
+                String data = converter.marshall(p, Packet.class);
+                data = data.replace("\n", "").replace("\r", "");
+                GameClient.sendData(data);
+                return true;
+            }
+            catch (Exception e)
+            {
+                System.out.println(e);
                 return false;
             }
         }

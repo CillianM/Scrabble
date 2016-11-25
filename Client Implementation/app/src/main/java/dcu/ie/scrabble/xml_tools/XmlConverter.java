@@ -2,7 +2,9 @@ package dcu.ie.scrabble.xml_tools;
 
 import java.io.StringWriter;
 import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.convert.AnnotationStrategy;
 import org.simpleframework.xml.core.Persister;
+import org.simpleframework.xml.strategy.Strategy;
 
 public class XmlConverter
 {
@@ -17,13 +19,15 @@ public class XmlConverter
     public <T> String marshall(T instance, Class<T> cls)
     {
         try {
-            Serializer serializer = new Persister();
+            Strategy strategy = new AnnotationStrategy();
+            Serializer serializer = new Persister(strategy);
             StringWriter writer = new StringWriter();
             serializer.write(instance, writer);
             return writer.toString();
         }
         catch (Exception e)
         {
+            System.out.println(e);
             return null;
         }
 
@@ -40,6 +44,7 @@ public class XmlConverter
         }
         catch (Exception e)
         {
+            System.out.println(e);
             return null;
         }
     }

@@ -1,11 +1,11 @@
 package dcu.ie.scrabble.xml_tools;
 
+import android.graphics.Point;
+
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
 import org.simpleframework.xml.Root;
-
-import dcu.ie.scrabble.xml_tools.CellSetter;
 
 @Root
 public class Packet {
@@ -18,6 +18,9 @@ public class Packet {
     @ElementArray (required=false)
     public char [] rack;
 
+    @ElementArray (required=false)
+    public String cellSetterStrings[];
+
     //Update Player
     @ElementArray (required=false)
     public char tiles[];
@@ -26,8 +29,8 @@ public class Packet {
     @Attribute (required=false)
     public String playerTurn;
 
-    @Element (required=false)
-    public CellSetter tileMove[];
+    @Attribute (required=false)
+    public CellSetter [] tilesSet;
 
     public Packet() {}
 
@@ -45,16 +48,35 @@ public class Packet {
     }
 
     public Packet(CellSetter tileMove[],String name) {
-        this.tileMove=tileMove;
+        cellSetterStrings = new String [tileMove.length];
+        for(int i = 0; i < tileMove.length;i++)
+        {
+            cellSetterStrings[i] = tileMove[i].toString();
+        }
         this.currentPlayer=name;
     }
 
     public Packet(CellSetter tileMove[]) {
-        this.tileMove=tileMove;
+        cellSetterStrings = new String [tileMove.length];
+        for(int i = 0; i < tileMove.length;i++)
+        {
+            cellSetterStrings[i] = tileMove[i].toString();
+        }
     }
 
     public String[] getPlayers() {
         return players;
+    }
+
+    public CellSetter[] deSerializeCellSetter(String [] strings)
+    {
+        CellSetter[] tilesSet = new CellSetter [strings.length];
+        for(int i = 0; i < strings.length;i++)
+        {
+            tilesSet[i] = new CellSetter(strings[i]);
+        }
+
+        return tilesSet;
     }
 
     public char[] getRack() {
@@ -79,8 +101,7 @@ public class Packet {
         return playerTurn;
     }
 
-    public CellSetter[] getTileMove()
-    {
-        return tileMove;
-    }
 }
+
+
+
