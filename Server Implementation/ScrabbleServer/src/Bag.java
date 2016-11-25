@@ -88,11 +88,11 @@ public class Bag
         collection.add(letter);
     }
 
-    public char [] getRandom()
+    public char [] getRandom(int count)
     {
-        char [] randoms = new char[7];
+        char [] randoms = new char[count];
         //return 7 random tiles from the collection
-        for(int i = 0; i < 7; i++)
+        for(int i = 0; i < count; i++)
         {
             int randInt = (int)(Math.random() * collection.size());
             if(collection.get(i) != null)

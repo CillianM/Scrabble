@@ -89,27 +89,24 @@ public class GameServer
         return input;
     }
 
-    public void updatePlayer(int player, String data)
-    {
-        //update specified player with specified data
-    }
 
-    public void updateBoard(CellSetter[] letterArray)
+
+    public void updateBoard(CellSetter[] lettersPlayed)
     {
         //Update the board with the specified data
 
-        for(int i = 0; i < letterArray.length; i++)
+        for(int i = 0; i < lettersPlayed.length; i++)
         {
-            char c = letterArray[i].character;
-            gameBoard.setCells(letterArray[i].position, new Tile(c, letterArray[i].isSpace));
+            char c = lettersPlayed[i].character;
+            gameBoard.setCells(lettersPlayed[i].position, new Tile(c, lettersPlayed[i].isSpace));
         }
     }
 
-    public boolean validateMove(CellSetter[] letterArray)
+    public boolean validateMove(CellSetter[] lettersPlayed)
     {
         //get all words created in this move and check if they are in the dictionary
-        ArrayList<WordPosition> wordPos = BoardReader.getWordPositions(letterArray, gameBoard);
-        String[] words = BoardReader.getWords(letterArray,wordPos, gameBoard);
+        ArrayList<WordPosition> wordPos = BoardReader.getWordPositions(lettersPlayed, gameBoard);
+        String[] words = BoardReader.getWords(lettersPlayed,wordPos, gameBoard);
         for(int i = 0; i < words.length; i++)
         {
             if(!dictionary.search(words[i]))
@@ -118,6 +115,47 @@ public class GameServer
             }
         }
         return true;
+    }
+
+    public void updatePlayer(int player, int score, char[] lettersToReturn)
+    {
+        //update specified player with specified data
+    }
+
+    public void executeMove(CellSetter[] lettersPlayed)
+    {
+        int playerID = 666;
+        char[] lettersToReturn;
+        int score = 0;
+
+        //A normal play tiles move
+        if(validateMove(lettersPlayed))
+        {
+            //place tiles
+            updateBoard(lettersPlayed);
+            //calculate score
+            ArrayList<WordPosition> wordPos = BoardReader.getWordPositions(lettersPlayed, gameBoard);
+            score = BoardReader.getScores(lettersPlayed, wordPos, gameBoard);
+
+            //HOW TO ASSIGN THE SCORE????????????????????????
+
+            //pull tiles from bag == to length of lettersPlayed
+            lettersToReturn = new char[lettersPlayed.length];
+            lettersToReturn = bag.getRandom(lettersPlayed.length);
+
+        }
+        else
+        {
+            //not a valid move, return the lettersPlayed
+            lettersToReturn = new char[lettersPlayed.length];
+            for(int i = 0; i < lettersPlayed.length; i++)
+            {
+                lettersToReturn[i] = lettersPlayed[i].character;
+            }
+        }
+        //update the player after move execution
+        updatePlayer(playerID,score,lettersToReturn);
+
     }
 
     public static boolean checkConnections(ClientThread[] clients)
