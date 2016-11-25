@@ -17,6 +17,7 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,12 +37,14 @@ public class GameScreen extends AppCompatActivity {
     BoardAdapter boardAdapter;
     PieceAdapter pieceAdapter;
     Spectator player = null;
+    boolean isPlayer;
     Packet packet;
     InitializePlayers initializePlayers;
+    SpectatorThread spectatorThread;
     PacketWait wait;
 
     LinearLayout gameScreen;
-    LinearLayout progress;
+    ProgressBar progress;
 
     String myName;
     boolean myTurn = false;
@@ -89,17 +92,19 @@ public class GameScreen extends AppCompatActivity {
         if(playerFlag.equals("SET"))
         {
             player = new ScrabblePlayer(intent.getStringExtra("NAME"));
+            isPlayer = true;
             Toast.makeText(getApplicationContext(), "You are a player", Toast.LENGTH_SHORT).show();
         }
         else
         {
             player = new Spectator();
+            isPlayer = false;
             Toast.makeText(getApplicationContext(), "You are a spectator", Toast.LENGTH_SHORT).show();
         }
 
 
         gameScreen = (LinearLayout) findViewById(R.id.gameScreen);
-        progress = (LinearLayout) findViewById(R.id.progress);
+        progress = (ProgressBar) findViewById(R.id.progress);
 
         boardAdapter = new BoardAdapter(this);
         pieceAdapter = new PieceAdapter(this);
@@ -116,38 +121,45 @@ public class GameScreen extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                 int x = position % 15;
                 int y = position / 15;
-                if (!isPlayingPiece) {
+                if(isPlayer) {
+                    if (!isPlayingPiece) {
 
-                    Toast.makeText(getApplicationContext(), "(" + x + "," + y + ")", Toast.LENGTH_SHORT).show();
-                } else {
-                    if(myTurn) {
-                        if (legal(x, y) || firstPiece) {
-                            firstPiece = false;
-                            originalIDs[playingCount] = new OriginalBoardTiles(pieceAdapter.squareIDs[position], position);
-                            playingCount++;
-                            Context context = v.getContext();
-                            int imageId = context.getResources().getIdentifier("" + pieceToPlay, "drawable", context.getPackageName());
-                            builder.append(pieceToPlay);
-                            pieceAdapter.squareIDs[position] = imageId;
-                            piecesGrid.setAdapter(pieceAdapter);
-                            board.set(x, y);
-                            cellSetters.add(new CellSetter(pieceToPlay, x, y, wasASpace));
-                            wasASpace = false;
-                            isPlayingPiece = false;
+                        Toast.makeText(getApplicationContext(), "(" + x + "," + y + ")", Toast.LENGTH_SHORT).show();
+                    } else {
+                        if (myTurn) {
+                            if (legal(x, y) || firstPiece) {
+                                firstPiece = false;
+                                originalIDs[playingCount] = new OriginalBoardTiles(pieceAdapter.squareIDs[position], position);
+                                playingCount++;
+                                Context context = v.getContext();
+                                int imageId = context.getResources().getIdentifier("" + pieceToPlay, "drawable", context.getPackageName());
+                                builder.append(pieceToPlay);
+                                pieceAdapter.squareIDs[position] = imageId;
+                                piecesGrid.setAdapter(pieceAdapter);
+                                board.set(x, y);
+                                cellSetters.add(new CellSetter(pieceToPlay, x, y, wasASpace));
+                                wasASpace = false;
+                                isPlayingPiece = false;
+                            } else {
+                                Toast.makeText(getApplicationContext(), "Must be linked to another tile", Toast.LENGTH_SHORT).show();
+                            }
                         } else {
-                            Toast.makeText(getApplicationContext(), "Must be linked to another tile", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), "Not your turn!", Toast.LENGTH_SHORT).show();
                         }
-                    }
-                    else
-                    {
-                        Toast.makeText(getApplicationContext(), "Not your turn!", Toast.LENGTH_SHORT).show();
                     }
                 }
             }
         });
 
-        initializePlayers = new InitializePlayers(packet);
-        initializePlayers.execute((Void) null);
+        if(isPlayer) {
+            initializePlayers = new InitializePlayers(packet);
+            initializePlayers.execute((Void) null);
+        }
+        else
+        {
+
+        }
+
     }
 
     private void showProgress(final boolean show) {
@@ -240,7 +252,7 @@ public class GameScreen extends AppCompatActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        if (id == 1)
+        if (id == 1 &&isPlayer)
         {
             originalIDs = new OriginalBoardTiles[7];
             originalRack = new OriginalRack[7];
@@ -258,7 +270,7 @@ public class GameScreen extends AppCompatActivity {
             wait.execute((Void) null);
         }
 
-        else if (id == 2)
+        else if (id == 2&&isPlayer)
         {
             if (!isPlayingPiece)
             {
@@ -313,36 +325,35 @@ public class GameScreen extends AppCompatActivity {
 
     public void placePiece(View view)
     {
-        if(myTurn) {
-            if (!isPlayingPiece) {
-                String name = this.getResources().getResourceEntryName(view.getId());
-                int index = Integer.parseInt(name.substring(name.indexOf("_") + 1));
-                if (!tileUsed[index]) {
-                    ImageView imageView = (ImageView) findViewById(view.getId());
-                    pieceToPlay = chars[index];
-                    chars[index] = '#';
-                    if (pieceToPlay == ' ') {
-                        spaceReplacement = new Replacement(imageView,view.getId(),index);
-                        tileUsed[index] = true;
-                        originalRack[playingCount] = new OriginalRack(imageView, view.getId(), pieceToPlay,true);
-                        imageView.setImageResource(R.drawable.nothing);
-                        isPlayingPiece = true;
-                        getSpaceReplacement();
+        if(isPlayer) {
+            if (myTurn) {
+                if (!isPlayingPiece) {
+                    String name = this.getResources().getResourceEntryName(view.getId());
+                    int index = Integer.parseInt(name.substring(name.indexOf("_") + 1));
+                    if (!tileUsed[index]) {
+                        ImageView imageView = (ImageView) findViewById(view.getId());
+                        pieceToPlay = chars[index];
+                        chars[index] = '#';
+                        if (pieceToPlay == ' ') {
+                            spaceReplacement = new Replacement(imageView, view.getId(), index);
+                            tileUsed[index] = true;
+                            originalRack[playingCount] = new OriginalRack(imageView, view.getId(), pieceToPlay, true);
+                            imageView.setImageResource(R.drawable.nothing);
+                            isPlayingPiece = true;
+                            getSpaceReplacement();
+                        } else {
+                            tileUsed[index] = true;
+                            originalRack[playingCount] = new OriginalRack(imageView, view.getId(), pieceToPlay, false);
+                            imageView.setImageResource(R.drawable.nothing);
+                            isPlayingPiece = true;
+                        }
                     }
-                    else {
-                        tileUsed[index] = true;
-                        originalRack[playingCount] = new OriginalRack(imageView, view.getId(), pieceToPlay,false);
-                        imageView.setImageResource(R.drawable.nothing);
-                        isPlayingPiece = true;
-                    }
+                } else {
+                    Toast.makeText(getApplicationContext(), "Place piece first!", Toast.LENGTH_SHORT).show();
                 }
             } else {
-                Toast.makeText(getApplicationContext(), "Place piece first!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Not your turn!", Toast.LENGTH_SHORT).show();
             }
-        }
-        else
-        {
-            Toast.makeText(getApplicationContext(), "Not your turn!", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -535,7 +546,7 @@ public class GameScreen extends AppCompatActivity {
                     imageId = context.getResources().getIdentifier("space", "drawable", context.getPackageName());
                 else
                     imageId = context.getResources().getIdentifier(setters[i].character + "", "drawable", context.getPackageName());
-                int index = setters[i].postion.x * 15 + setters[i].postion.y;
+                int index = setters[i].postion.y * 15 + setters[i].postion.x;
                 pieceAdapter.squareIDs[index] = imageId;
             }
 
@@ -624,6 +635,59 @@ public class GameScreen extends AppCompatActivity {
             if (success)
             {
                 showProgress(false);
+            }
+
+            else
+            {
+                onCancelled();
+            }
+        }
+
+        @Override
+        protected void onCancelled()
+        {
+            showProgress(false);
+        }
+    }
+
+    public class SpectatorThread implements Runnable
+    {
+        SpectatorReceiver receiver;
+
+        public SpectatorThread()
+        {
+
+        }
+
+        @Override
+        public void run()
+        {
+            while(true)
+            {
+
+            }
+        }
+    }
+
+    public class SpectatorReceiver extends AsyncTask<Void, Void, Boolean>
+    {
+        protected Boolean doInBackground(Void... params)
+        {
+            try
+            {
+                return true;
+            }
+            catch (RuntimeException e) {
+                return false;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success)
+        {
+            if (success)
+            {
+
             }
 
             else

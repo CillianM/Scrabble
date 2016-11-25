@@ -20,8 +20,7 @@ public class DictSearch
     {
         Set<String> dict = new HashSet<>();
         try{
-            System.out.println("Working Directory = " + System.getProperty("user.dir"));
-            Scanner file = new Scanner(new File( System.getProperty("user.dir")) +  "./dict.txt");
+            Scanner file = new Scanner(new File("C:\\Users\\Cillian\\Documents\\GitHub\\Scrabble\\Server Implementation\\ScrabbleServer\\src\\dict.txt"));
             while (file.hasNext()) {
                 dict.add(file.next().trim());
             }

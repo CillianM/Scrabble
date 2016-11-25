@@ -22,7 +22,7 @@ public class TestRunner
         Board gameBoard = new Board();
         DictSearch dictionary = new DictSearch();
 
-        //getWordPositions Test
+        /*getWordPositions Test
         gameBoard.setCells(new Point(0,0), new Tile ('H', false));
         gameBoard.setCells(new Point(1,0), new Tile ('E', false));
         gameBoard.setCells(new Point(2,0), new Tile ('L', false));
@@ -33,14 +33,14 @@ public class TestRunner
 
         gameBoard.setCells(new Point(4,4), new Tile ('E', false));
         gameBoard.setCells(new Point(5,4), new Tile ('A', false));
-        gameBoard.setCells(new Point(6,4), new Tile ('R', false));
+        gameBoard.setCells(new Point(6,4), new Tile ('R', false));*/
 
 
-        CellSetter[] lettersPlayed = {new CellSetter('O', 4, 0, false),
-                                    new CellSetter('U', 4, 1, false),
-                                    new CellSetter('T', 4, 2, false),
-                                    new CellSetter('T', 4, 3, false),
-                                    new CellSetter('R', 4, 5, false)};
+        CellSetter[] lettersPlayed = {new CellSetter('H', 4, 0, false),
+                                    new CellSetter('O', 5, 0, false),
+                                    new CellSetter('T', 6, 0, false)};
+                                    //new CellSetter('T', 4, 3, false),
+                                    //new CellSetter('R', 4, 5, false)};
 
 
         //getWordPositions
@@ -76,7 +76,7 @@ public class TestRunner
         for(int x = 0; x < lettersPlayed.length; x++)
         {
             char c = lettersPlayed[x].character;
-            gameBoard.setCells(lettersPlayed[x].getPostion(), new Tile(c, false));
+            gameBoard.setCells(lettersPlayed[x].getPosition(), new Tile(c, false));
         }
 
         //getScores test
