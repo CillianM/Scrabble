@@ -1,4 +1,5 @@
 import java.awt.*;
+import java.util.ArrayList;
 
 public class Board
 {
@@ -92,6 +93,7 @@ public class Board
 
     private void add(Point [] indexes,int id)
     {
+
         for(int i = 0; i<indexes.length;i++)
         {
             playingBoard[indexes[i].x][indexes[i].y] = new Cell(id);
@@ -100,20 +102,23 @@ public class Board
 
     private void fillBlanks()
     {
-        for(int y = 0; y<7;y++)
+        ArrayList<Point> locations = new ArrayList<>();
+        for(int y = 0; y<15;y++)
         {
-            for(int x = 0; x<7;x++)
+            for(int x = 0; x<15;x++)
             {
                 if(playingBoard[x][y] == null)
-                    playingBoard[x][y] = new Cell(0);
+                    locations.add(new Point(x,y));
             }
         }
+        Point [] points = locations.toArray(new Point[locations.size()]);
+        add(points,0);
     }
 
     public Cell getCells(Point position)
     {
         //return cell at specified postion
-        return playingBoard[position.x][position.y];
+        return playingBoard[(int)position.getX()][(int)position.getY()];
     }
 
     public void setCells(Point position, Tile newTile)

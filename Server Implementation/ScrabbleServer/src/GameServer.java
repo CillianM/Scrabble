@@ -86,15 +86,17 @@ public class GameServer
         //specified amount of client sockets
 
         bag = new Bag();
-        DictSearch dictionary = new DictSearch();
+        dictionary = new DictSearch();
+        gameBoard = new Board();
     }
 
-    public static Packet[] decodeData(String input)
+    public static Packet[] decodeData(String input,GameServer server)
     {
+
         XmlConverter converter =XmlConverter.newInstance();
         Packet packet = converter.unmarshall(input,Packet.class);
         CellSetter [] cellSetters = packet.deSerializeCellSetter(packet.cellSetterStrings);
-        boolean legal = executeMove(cellSetters,packet.currentPlayer);
+        boolean legal = executeMove(cellSetters,packet.currentPlayer,server);
 
         char [] newRack = new char[lettersToRack.size()];
         for (int i = 0; i < newRack.length; i++) {
@@ -128,16 +130,8 @@ public class GameServer
         }
         Packet [] packets = new Packet[2];
         packets[0] = new Packet(newRack,scores,nextPlayer,nextPlayer);
-        cellSetters = new CellSetter[225];
-        int y = 0;
-        index = 0;
-        for(int x = 0; x < 15; x++)
-        {
-            Cell tmp = gameBoard.getCells(new Point(x,y));
-            cellSetters[index] = new CellSetter(tmp.getPlacedTile().getLetter(),x,y,false);
-
-        }
         packets[1] = new Packet(cellSetters);
+
 
         //waiting on xml
         return packets;
@@ -145,25 +139,25 @@ public class GameServer
 
 
 
-    public static void updateBoard(CellSetter[] lettersPlayed)
+    public static void updateBoard(CellSetter[] lettersPlayed,GameServer server)
     {
         //Update the board with the specified data
 
         for(int i = 0; i < lettersPlayed.length; i++)
         {
-            char c = lettersPlayed[i].character;
-            gameBoard.setCells(lettersPlayed[i].getPosition(), new Tile(c, lettersPlayed[i].isSpace));
+            char c = lettersPlayed[i].getCharacter();
+            server.gameBoard.setCells(lettersPlayed[i].getPosition(), new Tile(c, lettersPlayed[i].isSpace));
         }
     }
 
-    public static boolean validateMove(CellSetter[] lettersPlayed)
+    public static boolean validateMove(CellSetter[] lettersPlayed,GameServer server)
     {
         //get all words created in this move and check if they are in the dictionary
-        ArrayList<WordPosition> wordPos = BoardReader.getWordPositions(lettersPlayed, gameBoard);
-        String[] words = BoardReader.getWords(lettersPlayed,wordPos, gameBoard);
+        ArrayList<WordPosition> wordPos = BoardReader.getWordPositions(lettersPlayed, server.gameBoard);
+        String[] words = BoardReader.getWords(lettersPlayed,wordPos, server.gameBoard);
         for(int i = 0; i < words.length; i++)
         {
-            if(!dictionary.search(words[i]))
+            if(!server.dictionary.search(words[i]))
             {
                 return false;
             }
@@ -171,7 +165,7 @@ public class GameServer
         return true;
     }
 
-    public static void updatePlayer(String playerName, int score, char[] lettersToReturn)
+    public static void updatePlayer(String playerName, int score, char[] lettersToReturn,GameServer server)
     {
         //update specified player with specified data
 
@@ -189,22 +183,22 @@ public class GameServer
 
     }
 
-    public static boolean executeMove(CellSetter[] lettersPlayed, String playerName)
+    public static boolean executeMove(CellSetter[] lettersPlayed, String playerName,GameServer server)
     {
         char[] lettersToReturn;
         boolean lettersArePlaced = false;
         int score = 0;
 
         //A normal play tiles move
-        if(validateMove(lettersPlayed))
+        if(validateMove(lettersPlayed,server))
         {
             //place tiles
-            updateBoard(lettersPlayed);
+            updateBoard(lettersPlayed,server);
             lettersArePlaced = true;
 
             //calculate score
-            ArrayList<WordPosition> wordPos = BoardReader.getWordPositions(lettersPlayed, gameBoard);
-            score = BoardReader.getScores(lettersPlayed, wordPos, gameBoard);
+            ArrayList<WordPosition> wordPos = BoardReader.getWordPositions(lettersPlayed, server.gameBoard);
+            score = BoardReader.getScores(lettersPlayed, wordPos, server.gameBoard);
 
             //pull tiles from bag == to length of lettersPlayed
             lettersToReturn = new char[lettersPlayed.length];
@@ -221,7 +215,7 @@ public class GameServer
             }
         }
         //update the player after move execution
-        updatePlayer(playerName,score,lettersToReturn);
+        updatePlayer(playerName,score,lettersToReturn,server);
 
         return lettersArePlaced;
     }
@@ -247,8 +241,6 @@ public class GameServer
         private ClientThread[] threads;
         private String name;
         private String role;//role signifier
-        private static int playerNumber = 1;
-        private HashMap<String, Integer> playerData;
 
         public ClientThread(GameServer server, Socket clientSocket, ClientThread[] threads, ArrayList<Spectator> spectatorThreads) {
             this.server = server;
@@ -284,7 +276,7 @@ public class GameServer
                     //decode line
 
                     //Need to get updates to players
-                    Packet[] updates = decodeData(line);
+                    Packet[] updates = decodeData(line,server);
 
 
                     String playerUpdate = converter.marshall(updates[0], Packet.class);
