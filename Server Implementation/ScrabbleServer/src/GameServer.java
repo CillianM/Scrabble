@@ -83,10 +83,58 @@ public class GameServer
         DictSearch dictionary = new DictSearch();
     }
 
-    public static String decodeData(String input)
+    public static Packet[] decodeData(String input)
     {
+        XmlConverter converter =XmlConverter.newInstance();
+        Packet packet = converter.unmarshall(input,Packet.class);
+        CellSetter [] cellSetters = packet.deSerializeCellSetter(packet.cellSetterStrings);
+        boolean legal = executeMove(cellSetters,packet.currentPlayer);
+
+        char [] newRack = new char[lettersToRack.size();
+        for (int i = 0; i < newRack.length; i++) {
+            newRack[i]=lettersToRack.get(i);
+        }
+        String [] names = new String [4];
+        int [] scores = new int [4];
+        String nextPlayer = packet.currentPlayer;;
+        Iterator it = playerData.entrySet().iterator();
+        int index = 0;
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry)it.next();
+            names[0] = (String)pair.getKey();
+            scores[0] = (Integer)pair.getValue();
+            it.remove(); // avoids a ConcurrentModificationException
+        }
+
+        if(legal)
+        {
+            for(int i = 0; i < names.length; i++)
+            {
+                if(names[i].equals(packet.currentPlayer)&& i < 3)
+                {
+                    nextPlayer = names[i+1];
+                }
+                if(names[i].equals(packet.currentPlayer)&& i > 3)
+                {
+                    nextPlayer = names[0];
+                }
+            }
+        }
+        Packet [] packets = new Packet[2];
+        packets[0] = new Packet(newRack,scores,nextPlayer,nextPlayer);
+        cellSetters = new CellSetter[225];
+        int y = 0;
+        index = 0;
+        for(int x = 0; x < 15; x++)
+        {
+            Cell tmp = gameBoard.getCells(new Point(x,y));
+            cellSetters[index] = new CellSetter(tmp.getPlacedTile().getLetter(),x,y,false);
+
+        }
+        packets[1] = new Packet(cellSetters);
+
         //waiting on xml
-        return input;
+        return packets;
     }
 
 
