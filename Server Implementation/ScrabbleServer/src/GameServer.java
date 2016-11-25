@@ -1,3 +1,4 @@
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -6,16 +7,21 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Map;
 
 public class GameServer
 {
-    Board gameBoard;
-    HashMap<Integer, String> playerData;
-    Bag bag;
-    DictSearch dictionary;
+    static Board gameBoard;
+    static HashMap<Integer, String> playerData;
+    static Bag bag;
+    static DictSearch dictionary;
+    static GameServer server;
+    static ArrayList <Character> lettersToRack = new ArrayList<>();
 
     public static void main(String [] args)
     {
+        server = new GameServer();
         ServerSocket serverSocket = null;
         int clientCount = 0;
         int spectatorCount = 0;
@@ -47,7 +53,7 @@ public class GameServer
                     {
                         if(clientThreads[i] == null)
                         {
-                            clientThreads[i] = new ClientThread(clientSocket, clientThreads,spectatorThreads);
+                            clientThreads[i] = new ClientThread(server,clientSocket, clientThreads,spectatorThreads);
                             Thread t = new Thread(clientThreads[i]);
                             t.start();
                             System.out.println("Players "  + (clientCount+1) + " of 4 currently connected");
@@ -90,7 +96,7 @@ public class GameServer
         CellSetter [] cellSetters = packet.deSerializeCellSetter(packet.cellSetterStrings);
         boolean legal = executeMove(cellSetters,packet.currentPlayer);
 
-        char [] newRack = new char[lettersToRack.size();
+        char [] newRack = new char[lettersToRack.size()];
         for (int i = 0; i < newRack.length; i++) {
             newRack[i]=lettersToRack.get(i);
         }
@@ -139,18 +145,18 @@ public class GameServer
 
 
 
-    public void updateBoard(CellSetter[] lettersPlayed)
+    public static void updateBoard(CellSetter[] lettersPlayed)
     {
         //Update the board with the specified data
 
         for(int i = 0; i < lettersPlayed.length; i++)
         {
             char c = lettersPlayed[i].character;
-            gameBoard.setCells(lettersPlayed[i].position, new Tile(c, lettersPlayed[i].isSpace));
+            gameBoard.setCells(lettersPlayed[i].getPostion(), new Tile(c, lettersPlayed[i].isSpace));
         }
     }
 
-    public boolean validateMove(CellSetter[] lettersPlayed)
+    public static boolean validateMove(CellSetter[] lettersPlayed)
     {
         //get all words created in this move and check if they are in the dictionary
         ArrayList<WordPosition> wordPos = BoardReader.getWordPositions(lettersPlayed, gameBoard);
@@ -165,16 +171,17 @@ public class GameServer
         return true;
     }
 
-    public void updatePlayer(int player, int score, char[] lettersToReturn)
+    public static void updatePlayer(int player, int score, char[] lettersToReturn)
     {
         //update specified player with specified data
     }
 
-    public void executeMove(CellSetter[] lettersPlayed)
+    public static boolean executeMove(CellSetter[] lettersPlayed,String player)
     {
         int playerID = 666;
         char[] lettersToReturn;
         int score = 0;
+        boolean legal;
 
         //A normal play tiles move
         if(validateMove(lettersPlayed))
@@ -190,7 +197,7 @@ public class GameServer
             //pull tiles from bag == to length of lettersPlayed
             lettersToReturn = new char[lettersPlayed.length];
             lettersToReturn = bag.getRandom(lettersPlayed.length);
-
+            legal =true;
         }
         else
         {
@@ -200,10 +207,11 @@ public class GameServer
             {
                 lettersToReturn[i] = lettersPlayed[i].character;
             }
+            legal = false;
         }
         //update the player after move execution
         updatePlayer(playerID,score,lettersToReturn);
-
+        return legal;
     }
 
     public static boolean checkConnections(ClientThread[] clients)
@@ -217,81 +225,80 @@ public class GameServer
         return true;
     }
 
-    static class ClientThread implements Runnable
-    {
+    static class ClientThread implements Runnable {
+        private GameServer server;
         private BufferedReader inputStream = null;
         private PrintStream outputStream = null;
         private Socket clientSocket = null;
         private ArrayList<Spectator> spectatorThreads;
-        private ClientThread [] threads;
+        private ClientThread[] threads;
         private String name;
         private String role;//role signifier
         private static int playerNumber = 1;
-        public ClientThread(Socket clientSocket, ClientThread [] threads, ArrayList<Spectator> spectatorThreads)
-        {
+        private HashMap<String, Integer> playerData;
+
+        public ClientThread(GameServer server, Socket clientSocket, ClientThread[] threads, ArrayList<Spectator> spectatorThreads) {
+            this.server = server;
             this.clientSocket = clientSocket;
             this.threads = threads;
             this.spectatorThreads = spectatorThreads;
-            try
-            {
+            try {
                 inputStream = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 outputStream = new PrintStream(clientSocket.getOutputStream());
                 this.name = inputStream.readLine();
                 this.role = "player";
                 this.outputStream.println(role);
                 this.outputStream.println("You are player " + playerNumber++ + " waiting on other players");
-            }
-            catch (IOException e)
-            {
+            } catch (IOException e) {
                 System.out.println(e + " in constructor of ClientThread");
                 e.printStackTrace();
             }
         }
 
-        public void run()
-        {
-            int maxClientCount = 4;
+        public void run() {
+            try {
+                while (threads.length < 4) {
+                    wait();
+                }
+            } catch (Exception e) {
 
-            try
-            {
+            }
 
-                while(true)
-                {
+            try {
+                while (true) {
                     String line = inputStream.readLine();
                     //decode line
 
-                    //evaluate using Bernard's masters method. Possibly decode as well. So ^ might be unnecessary
-                    String result = decodeData(line);;
-                    for(int i = 0; i < maxClientCount; i++)
-                    {
-                        if(threads[i] != null && threads[i] != this && result != null)
-                        {
-                            outputStream.println(result);
+                    //Need to get updates to players
+                    Packet[] updates = decodeData(line);
+
+                    XmlConverter converter = XmlConverter.newInstance();
+                    String playerUpdate = converter.marshall(updates[0], Packet.class);
+                    String boardUpdate = converter.marshall(updates[1], Packet.class);
+
+
+                    for (int i = 0; i < threads.length; i++) {
+                        if (threads[i] != null) {
+                            outputStream.println(playerUpdate);
+                            outputStream.println(boardUpdate);
                         }
                     }
 
-                    for(int i = 0; i < spectatorThreads.size(); i++)
-                    {
-                        if(spectatorThreads.get(i) != null && threads[i] != this && result != null)
-                        {
-                            outputStream.println(result);
+                    for (int i = 0; i < spectatorThreads.size(); i++) {
+                        if (spectatorThreads.get(i) != null) {
+                            outputStream.println(playerUpdate);
+                            outputStream.println(boardUpdate);
                         }
                     }
                 }
 
-            }
-
-            catch(IOException e)
-            {
+            } catch (IOException e) {
                 System.out.println(e + " in run method of ClientThread");
                 e.printStackTrace();
             }
 
 
         }
-
-
-
     }
 
     static class Spectator
