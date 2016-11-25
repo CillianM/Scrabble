@@ -1,30 +1,49 @@
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import java.io.StringReader;
 import java.io.StringWriter;
+import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.convert.AnnotationStrategy;
+import org.simpleframework.xml.core.Persister;
+import org.simpleframework.xml.strategy.Strategy;
 
-public class XmlConverter 
+public class XmlConverter
 {
 
-	private XmlConverter(){}
-	
-	public static XmlConverter newInstance()
-	{	
-		return new XmlConverter();
-	}
-	
-	public <T> String marshall(T instance, Class<T> cls) throws JAXBException
-	{
-		StringWriter writer = new StringWriter();
-		JAXBContext cntxt = JAXBContext.newInstance(cls);
-		cntxt.createMarshaller().marshal(instance, writer);
-		return writer.toString();
-	}
-	
-	public <T> T unmarshall(String xml, Class<T> cls) throws JAXBException
-	{
-		JAXBContext cntxt = JAXBContext.newInstance(cls);
-		Object obj = cntxt.createUnmarshaller().unmarshal(new StringReader(xml));
-		return cls.cast(obj);
-	}
+    private XmlConverter(){}
+
+    public static XmlConverter newInstance()
+    {
+        return new XmlConverter();
+    }
+
+    public <T> String marshall(T instance, Class<T> cls)
+    {
+        try {
+            Strategy strategy = new AnnotationStrategy();
+            Serializer serializer = new Persister(strategy);
+            StringWriter writer = new StringWriter();
+            serializer.write(instance, writer);
+            return writer.toString();
+        }
+        catch (Exception e)
+        {
+            System.out.println(e);
+            return null;
+        }
+
+
+    }
+
+    public <T> T unmarshall(String xml, Class<T> cls)
+    {
+        try
+        {
+            Serializer serializer = new Persister();
+            Object obj = serializer.read(cls, xml);
+            return cls.cast(obj);
+        }
+        catch (Exception e)
+        {
+            System.out.println(e);
+            return null;
+        }
+    }
 }
