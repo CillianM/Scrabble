@@ -10,7 +10,6 @@ import java.util.ArrayList;
 public class GameServer
 {
     Board gameBoard;
-    HashMap<Character, Integer> letterPoints;
     HashMap<Integer, String> playerData;
     Bag bag;
     DictSearch dictionary;
@@ -80,38 +79,6 @@ public class GameServer
 
         bag = new Bag();
         DictSearch dictionary = new DictSearch();
-        assignTilePoints();
-    }
-
-    private void assignTilePoints()
-    {
-        letterPoints.put('A',1);
-        letterPoints.put('B',3);
-        letterPoints.put('C',3);
-        letterPoints.put('D',2);
-        letterPoints.put('E',1);
-        letterPoints.put('F',4);
-        letterPoints.put('G',2);
-        letterPoints.put('H',4);
-        letterPoints.put('I',1);
-        letterPoints.put('J',8);
-        letterPoints.put('K',5);
-        letterPoints.put('L',1);
-        letterPoints.put('M',3);
-        letterPoints.put('N',1);
-        letterPoints.put('O',1);
-        letterPoints.put('P',3);
-        letterPoints.put('Q',10);
-        letterPoints.put('R',1);
-        letterPoints.put('S',1);
-        letterPoints.put('T',1);
-        letterPoints.put('U',1);
-        letterPoints.put('V',4);
-        letterPoints.put('W',4);
-        letterPoints.put('X',8);
-        letterPoints.put('Y',4);
-        letterPoints.put('Z',10);
-        letterPoints.put(' ',0);
     }
 
     public static String decodeData(String input)
@@ -132,14 +99,15 @@ public class GameServer
         for(int i = 0; i < letterArray.length; i++)
         {
             char c = letterArray[i].character;
-            gameBoard.setCells(letterArray[i].position, new Tile(c, letterPoints.get(c)));
+            gameBoard.setCells(letterArray[i].position, new Tile(c, letterArray[i].isSpace));
         }
     }
 
     public boolean validateMove(CellSetter[] letterArray)
     {
         //get all words created in this move and check if they are in the dictionary
-        String[] words = BoardReader.getWords(letterArray, gameBoard);
+        ArrayList<WordPosition> wordPos = BoardReader.getWordPositions(letterArray, gameBoard);
+        String[] words = BoardReader.getWords(letterArray,wordPos, gameBoard);
         for(int i = 0; i < words.length; i++)
         {
             if(!dictionary.search(words[i]))
