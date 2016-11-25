@@ -18,12 +18,14 @@ public class Cell
         * 3 == Double Word
         * 4 == Triple Letter
         * 5 == Triple Word
-        * 6 == Unplayable Cell
+        * 6 == Unplayable Cell <- Not used so far, possible future feature
         * */
+        multiplierUsed = false;
         typeID = ID;
         if(ID == 0 || ID == 6)
         {
             multiplier = 1;
+            multiplierUsed = true;
         }
         else if(ID == 1 || ID == 2 || ID == 3)
         {
@@ -56,5 +58,12 @@ public class Cell
     public int getMultiplier()
     {
         return multiplier;
+    }
+
+    public boolean getMultiplierUsed() {return multiplierUsed;}
+
+    public void setMultiplierUsed()
+    {
+        multiplierUsed = true;
     }
 }
