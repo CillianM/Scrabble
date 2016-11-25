@@ -3,12 +3,10 @@ import java.util.Random;
 
 public class Bag
 {
-    ArrayList<Character> collection;
+    ArrayList<Character> collection = new ArrayList<>();
 
     public Bag()
     {
-        for(int i = 0; i < collection.size(); i++)
-        {
             /*  letter, amount, pointvalue (point value handled in GameServer)
 
                 A	9	1
@@ -39,34 +37,33 @@ public class Bag
                 Z	1	10
                 Blank   2   0
              */
-            add('A', 9 ) ;
-            add('B', 2 ) ;
-            add('C', 2 ) ;
-            add('D', 4 ) ;
-            add('E', 12 ) ;
-            add('F', 2 ) ;
-            add('G', 3 ) ;
-            add('H', 2 ) ;
-            add('I', 9 ) ;
-            add('J', 1 ) ;
-            add('K', 1 ) ;
-            add('L', 4 ) ;
-            add('M', 2 ) ;
-            add('N', 6 ) ;
-            add('O', 8 ) ;
-            add('P', 2 ) ;
-            add('Q', 1 ) ;
-            add('R', 6 ) ;
-            add('S', 4 ) ;
-            add('T', 6 ) ;
-            add('U', 4 ) ;
-            add('V', 2 ) ;
-            add('W', 2 ) ;
-            add('X', 1 ) ;
-            add('Y', 2 ) ;
-            add('Z', 1 ) ;
+            add('a', 9 ) ;
+            add('b', 2 ) ;
+            add('c', 2 ) ;
+            add('d', 4 ) ;
+            add('e', 12 ) ;
+            add('f', 2 ) ;
+            add('g', 3 ) ;
+            add('h', 2 ) ;
+            add('i', 9 ) ;
+            add('j', 1 ) ;
+            add('k', 1 ) ;
+            add('l', 4 ) ;
+            add('m', 2 ) ;
+            add('n', 6 ) ;
+            add('o', 8 ) ;
+            add('p', 2 ) ;
+            add('q', 1 ) ;
+            add('r', 6 ) ;
+            add('s', 4 ) ;
+            add('t', 6 ) ;
+            add('u', 4 ) ;
+            add('v', 2 ) ;
+            add('w', 2 ) ;
+            add('x', 1 ) ;
+            add('y', 2 ) ;
+            add('z', 1 ) ;
             add(' ', 2 ) ;
-        }
     }
 
     public void add(char letter, int count)

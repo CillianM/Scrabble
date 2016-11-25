@@ -13,7 +13,7 @@ import java.util.Map;
 public class GameServer
 {
     static Board gameBoard;
-    static HashMap<Integer, String> playerData;
+    static HashMap<String,Integer> playerData = new HashMap<>();
     static Bag bag;
     static DictSearch dictionary;
     static GameServer server;
@@ -152,7 +152,7 @@ public class GameServer
         for(int i = 0; i < lettersPlayed.length; i++)
         {
             char c = lettersPlayed[i].character;
-            gameBoard.setCells(lettersPlayed[i].getPostion(), new Tile(c, lettersPlayed[i].isSpace));
+            gameBoard.setCells(lettersPlayed[i].getPosition(), new Tile(c, lettersPlayed[i].isSpace));
         }
     }
 
@@ -171,33 +171,45 @@ public class GameServer
         return true;
     }
 
-    public static void updatePlayer(int player, int score, char[] lettersToReturn)
+    public static void updatePlayer(String playerName, int score, char[] lettersToReturn)
     {
         //update specified player with specified data
+
+        //update the player's score
+        int oldScore = playerData.get(playerName);
+        playerData.replace(playerName, (oldScore + score));
+
+        //update the letters to be returned to the player
+        lettersToRack.clear();
+        for(int i = 0; i < lettersToReturn.length; i++)
+        {
+            lettersToRack.add(lettersToReturn[i]);
+        }
+
+
     }
 
-    public static boolean executeMove(CellSetter[] lettersPlayed,String player)
+    public static boolean executeMove(CellSetter[] lettersPlayed, String playerName)
     {
-        int playerID = 666;
         char[] lettersToReturn;
+        boolean lettersArePlaced = false;
         int score = 0;
-        boolean legal;
 
         //A normal play tiles move
         if(validateMove(lettersPlayed))
         {
             //place tiles
             updateBoard(lettersPlayed);
+            lettersArePlaced = true;
+
             //calculate score
             ArrayList<WordPosition> wordPos = BoardReader.getWordPositions(lettersPlayed, gameBoard);
             score = BoardReader.getScores(lettersPlayed, wordPos, gameBoard);
 
-            //HOW TO ASSIGN THE SCORE????????????????????????
-
             //pull tiles from bag == to length of lettersPlayed
             lettersToReturn = new char[lettersPlayed.length];
             lettersToReturn = bag.getRandom(lettersPlayed.length);
-            legal =true;
+
         }
         else
         {
@@ -207,12 +219,13 @@ public class GameServer
             {
                 lettersToReturn[i] = lettersPlayed[i].character;
             }
-            legal = false;
         }
         //update the player after move execution
-        updatePlayer(playerID,score,lettersToReturn);
-        return legal;
+        updatePlayer(playerName,score,lettersToReturn);
+
+        return lettersArePlaced;
     }
+
 
     public static boolean checkConnections(ClientThread[] clients)
     {
@@ -246,23 +259,24 @@ public class GameServer
                 inputStream = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 outputStream = new PrintStream(clientSocket.getOutputStream());
                 this.name = inputStream.readLine();
+                server.playerData.put(name,0);
                 this.role = "player";
                 this.outputStream.println(role);
-                this.outputStream.println("You are player " + playerNumber++ + " waiting on other players");
             } catch (IOException e) {
                 System.out.println(e + " in constructor of ClientThread");
                 e.printStackTrace();
             }
         }
 
-        public void run() {
-            try {
-                while (threads.length < 4) {
-                    wait();
-                }
-            } catch (Exception e) {
-
-            }
+        public void run()
+        {
+            XmlConverter converter = XmlConverter.newInstance();
+            char [] initialRack = server.bag.getRandom(7);
+            String [] names = new String[]{name,name+"1",name+"2",name+"3"};
+            Packet p = new Packet(names,name,initialRack);
+            String initialData = converter.marshall(p,Packet.class);
+            initialData = initialData.replace("\n", "").replace("\r", "");
+            outputStream.println(initialData);
 
             try {
                 while (true) {
@@ -272,9 +286,11 @@ public class GameServer
                     //Need to get updates to players
                     Packet[] updates = decodeData(line);
 
-                    XmlConverter converter = XmlConverter.newInstance();
+
                     String playerUpdate = converter.marshall(updates[0], Packet.class);
+                    playerUpdate = playerUpdate.replace("\n", "").replace("\r", "");
                     String boardUpdate = converter.marshall(updates[1], Packet.class);
+                    boardUpdate = boardUpdate.replace("\n", "").replace("\r", "");
 
 
                     for (int i = 0; i < threads.length; i++) {

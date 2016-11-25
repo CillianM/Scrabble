@@ -14,7 +14,7 @@ public class WordPosition
     WordPosition(CellSetter c, boolean h)
     {
         startCell = c;
-        position = new Point (c.position);
+        position = new Point (c.getPosition());
         isHorizontal = h;
     }
 
