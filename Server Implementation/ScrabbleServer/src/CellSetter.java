@@ -6,13 +6,12 @@ import org.simpleframework.xml.convert.Convert;
 import java.awt.*;
 
 @Root
-@Convert(value=CellSetterTransformer.class)
 public class CellSetter
 {
 	@Attribute (required=false, name = "character")
 	public char character;
 	@Attribute (required=false, name = "point")
-	public Point postion;
+	public Point position;
 	@Attribute (required=false, name = "isSpace")
 	public boolean isSpace;
 
@@ -26,13 +25,13 @@ public class CellSetter
 		this.character = serialized.charAt(0);
 		String x = serialized.substring(xIndex,xIndex+1);
 		String y = serialized.substring(yIndex,yIndex+1);
-		this.postion = new Point(Integer.parseInt(x),Integer.parseInt(y));
+		this.position = new Point(Integer.parseInt(x),Integer.parseInt(y));
 		this.isSpace = Boolean.valueOf(serialized.substring(bIndex));
 	}
 
 	public CellSetter (char a, int x, int y,  boolean isSpace) {
 		this.character = a;
-		this.postion = new Point(x,y);;
+		this.position = new Point(x,y);;
 		this.isSpace = isSpace;
 	}
 
@@ -41,9 +40,19 @@ public class CellSetter
 		return character;
 	}
 
-	public Point getPostion()
+	public Point getPosition()
 	{
-		return postion;
+		return position;
+	}
+
+	public int getX()
+	{
+		 return position.x;
+	}
+
+	public int getY()
+	{
+		return position.y;
 	}
 
 	public boolean isSpace()
@@ -58,12 +67,12 @@ public class CellSetter
 
 	public void setX(int x)
 	{
-		postion.x = x;
+		position.x = x;
 	}
 
 	public void setY(int y)
 	{
-		postion.y = y;
+		position.y = y;
 	}
 
 	public void setSpace(boolean space)
@@ -73,6 +82,6 @@ public class CellSetter
 
 	public String toString()
 	{
-		return character + "-" + postion.x + "#" +postion.y + "*" + isSpace;
+		return character + "-" + position.x + "#" +position.y + "*" + isSpace;
 	}
 }

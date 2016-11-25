@@ -108,7 +108,7 @@ public class BoardReader
             {
                 for(int i = 0; i < playedLetters.length; i++)
                 {
-                    if(currentPos.equals(playedLetters[i].position))
+                    if(currentPos.equals(playedLetters[i].getPosition()))
                     {
                         word += playedLetters[i].character;
                         break;
@@ -140,7 +140,7 @@ public class BoardReader
         //determine the direction of the main word (horizontal or vertical)
         if(playedLetters.length == 1)
         {
-            if(upAndDownCellStatus(playedLetters[0].position, playedLetters, b) == 1)
+            if(upAndDownCellStatus(playedLetters[0].getPosition(), playedLetters, b) == 1)
             {
                 isMainWordHorizontal = true;
             }
@@ -151,7 +151,7 @@ public class BoardReader
         }
         else
         {
-            isMainWordHorizontal = playedLetters[0].position.getY() == playedLetters[1].position.getY();
+            isMainWordHorizontal = playedLetters[0].getPosition().getY() == playedLetters[1].position.getY();
         }
 
         WordPosition searchStartPosition = new WordPosition(playedLetters[0], isMainWordHorizontal);
@@ -190,10 +190,10 @@ public class BoardReader
                 }
                 else
                 {
-                     if(leftAndRightCellStatus(currentPos,playedLetters,b) == 1)
-                     {
-                         otherWords.add(new WordPosition(new Point(currentPos),!isMainWordHorizontal));
-                     }
+                    if(leftAndRightCellStatus(currentPos,playedLetters,b) == 1)
+                    {
+                        otherWords.add(new WordPosition(new Point(currentPos),!isMainWordHorizontal));
+                    }
                 }
             }
 
@@ -245,7 +245,7 @@ public class BoardReader
         //Checks if a cellSetter is to set a tile in this position
         for(int i = 0; i < playedLetters.length; i++)
         {
-            if(p.equals(playedLetters[i].position))
+            if(p.equals(playedLetters[i].getPosition()))
                 return true;
         }
         return false;

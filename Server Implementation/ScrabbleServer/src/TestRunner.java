@@ -76,7 +76,7 @@ public class TestRunner
         for(int x = 0; x < lettersPlayed.length; x++)
         {
             char c = lettersPlayed[x].character;
-            gameBoard.setCells(lettersPlayed[x].position, new Tile(c, false));
+            gameBoard.setCells(lettersPlayed[x].getPostion(), new Tile(c, false));
         }
 
         //getScores test
