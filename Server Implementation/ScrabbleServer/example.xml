@@ -1,0 +1,17 @@
+<packet currentPlayer="Cillian" playerTurn="">
+   <players length="4">
+      <string>Cillian</string>
+      <string>Filip</string>
+      <string>Bernard</string>
+      <string>Shaun</string>
+   </players>
+   <rack length="7">
+      <char> </char>
+      <char>a</char>
+      <char>b</char>
+      <char>c</char>
+      <char>d</char>
+      <char>s</char>
+      <char>z</char>
+   </rack>
+</packet>

@@ -1,27 +1,41 @@
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashMap;
+import java.util.*;
 
 public class GameServer
 {
-    private static ServerSocket serverSocket = null;
-    private static int clientCount = 0;
-    private static int spectatorCount = 0;
-    private static ClientThread [] clientThreads = new ClientThread[];
-    private static Socket clientSocket = null;
-    private static ArrayList<SpectatorThread> spectatorThreads = new ArrayList<>(Collections.nCopies(10, null));
-    Board gameBoard;
-    HashMap<Character, Integer> letterPoints;
-    HashMap<Integer, String> playerData;
+    static Board gameBoard;
+    static HashMap<String, Integer> playerData;
+    static ArrayList<Character> lettersToRack;
     Bag bag;
     DictSearch dictionary;
 
+    public GameServer()
+    {
+        //instantiate and start the server using the
+        //specified amount of client sockets
+        lettersToRack = new ArrayList<>();
+        gameBoard = new Board();
+        bag = new Bag();
+        dictionary = new DictSearch();
+    }
+
     public static void main(String [] args)
     {
+        GameServer server = new GameServer();
+        ServerSocket serverSocket = null;
+        int clientCount = 0;
+        int spectatorCount = 0;
+        ClientThread [] clientThreads = new ClientThread[4];
+        Socket clientSocket = null;
+        ArrayList<Spectator> spectatorThreads = new ArrayList<>();
+
+
         int portNumber = 7777;
 
         try
@@ -35,106 +49,101 @@ public class GameServer
 
         while(true)
         {
-            //try to add as player, otherwise add to spectator arraylist
+            //try to add as player, otherwise add to spectator array list
             try
             {
                 clientSocket = serverSocket.accept();
-                if(clientCount != 4 )
+                //if game isn't already in progress add players
+                if(!checkConnections(clientThreads))
                 {
                     for(int i = 0; i < clientThreads.length; i++)
                     {
                         if(clientThreads[i] == null)
                         {
-                            clientThreads[i] = new ClientThread(clientSocket, clientThreads));
+                            clientThreads[i] = new ClientThread(server, clientSocket, clientThreads,spectatorThreads);
                             Thread t = new Thread(clientThreads[i]);
                             t.start();
+                            System.out.println("Players "  + (clientCount+1) + " of 4 currently connected");
                             clientCount++;
-                            System.out.println("Clients " + clientCount);
+                            clientThreads[0].notify();
+                            clientThreads[1].notify();
+                            clientThreads[2].notify();
+                            clientThreads[3].notify();
                             break;
                         }
                     }
                 }
                 else
                 {
-                    int size = spectatorThreads.size();
-                    for(int i = 0; i < size; i++)
-                    {
-                        if(spectatorThreads.get(i) == null)
-                        {
-                            spectatorThreads.set(i, new SpectatorThread(clientSocket, spectatorThreads));
-                            Thread t = new Thread(spectatorThreads.get(i));
-                            t.start();
-                            spectatorCount++;
-                            System.out.println("Spectators " + spectatorCount);
-                            break;
-                        }
-                    }
+                    //GameServer game = new GameServer();
+                    spectatorThreads.add(new Spectator(clientSocket));
+                    spectatorCount++;
+                    System.out.println("Spectators " + spectatorCount);
+
                 }
             }
+
             catch(IOException e)
             {
-                System.out.println(e);
+                System.out.println(e + " at GameServer Main ");
+                e.printStackTrace();
             }
         }
     }
 
-    public GameServer()
-    {
-        //instantiate and start the server using the
-        //specified amount of client sockets
 
-        bag = new Bag();
-        DictSearch dictionary = new DictSearch();
-        assignTilePoints();
-    }
-
-    private void assignTilePoints()
+    public static Packet[] decodeData(String input)
     {
-        letterPoints.put('A',1);
-        letterPoints.put('B',3);
-        letterPoints.put('C',3);
-        letterPoints.put('D',2);
-        letterPoints.put('E',1);
-        letterPoints.put('F',4);
-        letterPoints.put('G',2); 
-        letterPoints.put('H',4);
-        letterPoints.put('I',1);
-        letterPoints.put('J',8);
-        letterPoints.put('K',5);
-        letterPoints.put('L',1);
-        letterPoints.put('M',3);
-        letterPoints.put('N',1);
-        letterPoints.put('O',1);
-        letterPoints.put('P',3);
-        letterPoints.put('Q',10);
-        letterPoints.put('R',1);
-        letterPoints.put('S',1);
-        letterPoints.put('T',1);
-        letterPoints.put('U',1);
-        letterPoints.put('V',4);
-        letterPoints.put('W',4);
-        letterPoints.put('X',8);
-        letterPoints.put('Y',4);
-        letterPoints.put('Z',10);
-        letterPoints.put(' ',0);
-    }
+        XmlConverter converter =XmlConverter.newInstance();
+        Packet packet = converter.unmarshall(input,Packet.class);
+        CellSetter [] cellSetters = packet.deSerializeCellSetter(packet.cellSetterStrings);
+        boolean legal = executeMove(cellSetters,packet.currentPlayer);
 
-    public String encodeData(String input)
-    {
-        //Encode the data to XML for transport
-        return input;
-    }
+        char [] newRack = new char[lettersToRack.size();
+        for (int i = 0; i < newRack.length; i++) {
+            newRack[i]=lettersToRack.get(i);
+        }
+        String [] names = new String [4];
+        int [] scores = new int [4];
+        String nextPlayer = packet.currentPlayer;;
+        Iterator it = playerData.entrySet().iterator();
+        int index = 0;
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry)it.next();
+            names[0] = (String)pair.getKey();
+            scores[0] = (Integer)pair.getValue();
+            it.remove(); // avoids a ConcurrentModificationException
+        }
 
-    public String decodeData(String input)
-    {
-        //decode xml for use in the game
-        return input;
-    }
+        if(legal)
+        {
+            for(int i = 0; i < names.length; i++)
+            {
+                if(names[i].equals(packet.currentPlayer)&& i < 3)
+                {
+                    nextPlayer = names[i+1];
+                }
+                if(names[i].equals(packet.currentPlayer)&& i > 3)
+                {
+                    nextPlayer = names[0];
+                }
+            }
+        }
+        Packet [] packets = new Packet[2];
+        packets[0] = new Packet(newRack,scores,nextPlayer,nextPlayer);
+        cellSetters = new CellSetter[225];
+        int y = 0;
+        index = 0;
+        for(int x = 0; x < 15; x++)
+        {
+            Cell tmp = gameBoard.getCells(new Point(x,y));
+            cellSetters[index] = new CellSetter(tmp.getPlacedTile().getLetter(),x,y,false);
 
-    public boolean sendData(Socket destination, String data)
-    {
-        //send the specied socket the data required
-        return true;
+        }
+        packets[1] = new Packet(cellSetters);
+
+        //waiting on xml
+        return packets;
     }
 
     public void updatePlayer(int player, String data)
@@ -142,218 +151,178 @@ public class GameServer
         //update specified player with specified data
     }
 
-    public void updateBoard(cellSetter[] letterArray)
+    public void updateBoard(CellSetter[] letterArray)
     {
         //Update the board with the specified data
 
-        for(int i = 0; i < letterArray.length(); i++)
+    }
+
+    public boolean validateMove(CellSetter[] letterArray)
+    {
+
+    }
+
+    public static void executeMove(CellSetter[] lettersPlayed)
+    {
+        int playerID = 666;
+        char[] lettersToReturn;
+        int score = 0;
+
+        //A normal play tiles move
+        if(validateMove(lettersPlayed))
         {
-            char c = letterArray[i].character;
-            gameBoard.setCells(letterArray[i].positions, new Tile(c, letterPoints.get(c)));
+            //place tiles
+            updateBoard(lettersPlayed);
+            //calculate score
+            ArrayList<WordPosition> wordPos = BoardReader.getWordPositions(lettersPlayed, gameBoard);
+            score = BoardReader.getScores(lettersPlayed, wordPos, gameBoard);
+
+            //HOW TO ASSIGN THE SCORE????????????????????????
+
+            //pull tiles from bag == to length of lettersPlayed
+            lettersToReturn = new char[lettersPlayed.length];
+            lettersToReturn = bag.getRandom(lettersPlayed.length);
+
         }
+        else
+        {
+            //not a valid move, return the lettersPlayed
+            lettersToReturn = new char[lettersPlayed.length];
+            for(int i = 0; i < lettersPlayed.length; i++)
+            {
+                lettersToReturn[i] = lettersPlayed[i].character;
+            }
+        }
+        //update the player after move execution
+        updatePlayer(playerID,score,lettersToReturn);
+
     }
 
-    public boolean validateMove(String word)
-    {
-        //check if the word is legal
-        return dictionary.search(word);
-    }
 
-    public void receiveData(String data)
-    {
-        this.data = data;
-        
-
-    }
-
-    public boolean checkConnections()
+    public static boolean checkConnections(ClientThread[] clients)
     {
         //check if there is a current game in progress
+        for(int i = 0; i < clients.length; i++)
+        {
+            if (clients[i] == null)
+                return false;
+        }
         return true;
     }
-}
 
-class ClientThread implements Runnable
-{
-    private BufferedReader inputStream = null;
-    private PrintStream outputStream = null;
-    private Socket clientSocket = null;
-    private ClientThread [] threads = new ClientThread[];
-    private String name;
-    private String role;
-    //role signifier
-    public ClientThread(Socket clientSocket, ClientThread [] threads)
+    static class ClientThread implements Runnable
     {
-        this.clientSocket = clientSocket;
-        this.threads = threads;
-        try
-        {
-            inputStream = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            outputStream = new PrintStream(clientSocket.getOutputStream());
-            this.name = inputStream.readLine();
-            this.role = "player";
-            this.outputStream.println(role);
-        }
-        catch (IOException e)
-        {
-            System.out.println(e);
-        }
-    }
-
-    public void run()
-    {
-        int maxClientCount = 4;
-        ClientThread [] threads = new ClientThread[maxClientCount];
-
-        try
-        {
-            for(int i = 0; i < maxClientCount; i++)
-            {
-                if(threads[i] != null)
-                {
-                    threads[i].outputStream.println(name + " just joined the game...");
-                    //joining game logic here.
-                }
-            }
-
-            while(true)
-            {
-                String line = inputStream.readLine();
-                if(line.equals(role))
-                {
-                    break;
-                }
-                else
-                {
-                    for(int i = 0; i < maxClientCount; i++)
-                    {
-                        if(threads[i] != null && threads[i] != this)
-                        {
-                            //get move from players
-                            String data = inputStream.readLine();
-                            recieveData(data);
-                        }
-                    }
-                }
-            }
-
-            for(int i = 0; i < maxClientCount; i++)
-            {
-                if(threads[i] != null && threads[i] != this)
-                {
-                    threads[i].outputStream.println(name + "has just left the game...");
-
-                }
-            }
-
-            for(int i = 0; i < maxClientCount; i++)
-            {
-                if(threads[i] == this)
-                {
-                    threads[i] = null;
-                }
-            }
-
-        }
-
-        catch(IOException e)
-        {
-
-        }
-
-
-    }
-
-    class SpectatorThread implements Runnable
-    {
+        private GameServer server;
         private BufferedReader inputStream = null;
         private PrintStream outputStream = null;
         private Socket clientSocket = null;
-        private final  ArrayList<SpectatorThread> threads;
-        private int maxClientsCount;
+        private ArrayList<Spectator> spectatorThreads;
+        private ClientThread [] threads;
         private String name;
-        private String role;
+        private String role;//role signifier
+        private static int playerNumber = 1;
+        private HashMap<String,Integer> playerData;
 
-        public SpectatorThread(Socket clientSocket, ArrayList<SpectatorThread> threads)
+        public ClientThread(GameServer server, Socket clientSocket, ClientThread [] threads, ArrayList<Spectator> spectatorThreads)
         {
+            this.server = server;
             this.clientSocket = clientSocket;
             this.threads = threads;
-            maxClientsCount = threads.size();
+            this.spectatorThreads = spectatorThreads;
             try
             {
                 inputStream = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 outputStream = new PrintStream(clientSocket.getOutputStream());
                 this.name = inputStream.readLine();
-                this.role = "spectator";
+                this.role = "player";
                 this.outputStream.println(role);
             }
             catch (IOException e)
             {
-
+                System.out.println(e + " in constructor of ClientThread");
+                e.printStackTrace();
             }
         }
 
         public void run()
         {
-            int maxClientsCount = this.maxClientsCount;
-            ArrayList<SpectatorThread> threads = this.threads;
+            try
+            {
+                while(threads.length < 4)
+                {
+                    wait();
+                }
+            }
+            catch (Exception e)
+            {
+
+            }
 
             try
             {
-
-                for (int i = 0; i < maxClientsCount; i++)
-                {
-                    if (threads.get(i) != null)
-                    {
-                        threads.get(i).outputStream.println(name + " is spectating the game");
-                    }
-                }
-                while (true)
+                while(true)
                 {
                     String line = inputStream.readLine();
-                    if (line.equals(role))
+                    //decode line
+
+                    //Need to get updates to players
+                    Packet [] updates = decodeData(line);
+
+                    XmlConverter converter = XmlConverter.newInstance();
+                    String playerUpdate = converter.marshall(updates[0],Packet.class);
+                    String boardUpdate = converter.marshall(updates[1],Packet.class);
+
+
+                    for(int i = 0; i < threads.length; i++)
                     {
-                        break;
-                    }
-                    else
-                    {
-                        for (int i = 0; i < maxClientsCount; i++)
+                        if(threads[i] != null)
                         {
-                            if (threads.get(i) != null && threads.get(i) != this)
-                            {
-                                //redundant
-                            }
+                            outputStream.println(playerUpdate);
+                            outputStream.println(boardUpdate);
+                        }
+                    }
+
+                    for(int i = 0; i < spectatorThreads.size(); i++)
+                    {
+                        if(spectatorThreads.get(i) != null)
+                        {
+                            outputStream.println(playerUpdate);
+                            outputStream.println(boardUpdate);
                         }
                     }
                 }
 
-                for (int i = 0; i < maxClientsCount; i++)
-                {
-                    if (threads.get(i) != null && threads.get(i) != this)
-                    {
-                        threads.get(i).outputStream.println(name + " has just left the game...");
-                    }
-                }
+            }
 
-                //Remove the users thread
-                for (int i = 0; i < maxClientsCount; i++)
-                {
-                    if (threads.get(i) == this)
-                    {
-                        threads.set(i,null);
-                    }
-                }
+            catch(IOException e)
+            {
+                System.out.println(e + " in run method of ClientThread");
+                e.printStackTrace();
+            }
 
-                //Close all streams when done
-                inputStream.close();
-                outputStream.close();
-                clientSocket.close();
+
+        }
+
+    }
+
+    static class Spectator
+    {
+        private PrintStream outputStream = null;
+        private Socket clientSocket = null;
+
+        public Spectator(Socket clientSocket)
+        {
+            this.clientSocket = clientSocket;
+            try
+            {
+                outputStream = new PrintStream(clientSocket.getOutputStream());
+                this.outputStream.println("spectator");
             }
             catch (IOException e)
             {
-
+                System.out.println(e + " in Spectator creation");
+                e.printStackTrace();
             }
         }
     }
-
 }

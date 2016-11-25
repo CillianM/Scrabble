@@ -6,22 +6,15 @@
     android:orientation="vertical"
     android:weightSum="100" >
 
-    <LinearLayout
+    <ProgressBar
         android:id="@+id/progress"
-        android:layout_alignParentTop="true"
-        android:layout_width="fill_parent"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="100"
-        android:visibility="visible">
+        android:gravity="center"
+        android:layout_gravity="center"
+        android:layout_marginTop="200dp" />
 
-        <ProgressBar
-            style="?android:attr/progressBarStyleLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-             />
-
-    </LinearLayout>
 
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/gameScreen"
@@ -123,49 +116,49 @@
             android:id="@+id/piece_0"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:src="@drawable/a"
+            android:src="@drawable/nothing"
             android:layout_weight="0.14"
             android:onClick="placePiece"/>
         <ImageView
             android:id="@+id/piece_1"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:src="@drawable/b"
+            android:src="@drawable/nothing"
             android:layout_weight="0.14"
             android:onClick="placePiece"/>
         <ImageView
             android:id="@+id/piece_2"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:src="@drawable/c"
+            android:src="@drawable/nothing"
             android:layout_weight="0.14"
             android:onClick="placePiece"/>
         <ImageView
             android:id="@+id/piece_3"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:src="@drawable/d"
+            android:src="@drawable/nothing"
             android:layout_weight="0.14"
             android:onClick="placePiece"/>
         <ImageView
             android:id="@+id/piece_4"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:src="@drawable/e"
+            android:src="@drawable/nothing"
             android:layout_weight="0.14"
             android:onClick="placePiece"/>
         <ImageView
             android:id="@+id/piece_5"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:src="@drawable/f"
+            android:src="@drawable/nothing"
             android:layout_weight="0.14"
             android:onClick="placePiece"/>
         <ImageView
             android:id="@+id/piece_6"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:src="@drawable/g"
+            android:src="@drawable/nothing"
             android:layout_weight="0.14"
             android:onClick="placePiece"/>
     </LinearLayout>
