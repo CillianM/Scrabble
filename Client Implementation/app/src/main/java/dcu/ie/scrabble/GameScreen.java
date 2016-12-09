@@ -36,7 +36,6 @@ public class GameScreen extends AppCompatActivity {
     private static final int REQUEST_SPACE_REPLACEMENT = 0;
     BoardAdapter boardAdapter;
     PieceAdapter pieceAdapter;
-    Spectator player = null;
     boolean isPlayer;
     Packet packet;
     InitializePlayers initializePlayers;
@@ -91,13 +90,11 @@ public class GameScreen extends AppCompatActivity {
         String playerFlag = intent.getStringExtra("PLAYER");
         if(playerFlag.equals("SET"))
         {
-            player = new ScrabblePlayer(intent.getStringExtra("NAME"));
             isPlayer = true;
             Toast.makeText(getApplicationContext(), "You are a player", Toast.LENGTH_SHORT).show();
         }
         else
         {
-            player = new Spectator();
             isPlayer = false;
             Toast.makeText(getApplicationContext(), "You are a spectator", Toast.LENGTH_SHORT).show();
         }
