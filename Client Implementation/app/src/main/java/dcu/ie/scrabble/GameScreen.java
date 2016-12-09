@@ -211,7 +211,28 @@ public class GameScreen extends AppCompatActivity {
 
     public boolean legal(int x,int y)
     {
-        return true;
+        if(board.isSet(x,y))
+        {
+            return false;
+        }
+        else if(board.isSet((x-1),y))
+        {
+            return true;
+        }
+        else if(board.isSet((x+1),y))
+        {
+            return true;
+        }
+        else if(board.isSet(x,y-1))
+        {
+            return true;
+        }
+        else if(board.isSet(x,y+1))
+        {
+            return true;
+        }
+
+        return false;
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {
