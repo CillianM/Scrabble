@@ -211,28 +211,7 @@ public class GameScreen extends AppCompatActivity {
 
     public boolean legal(int x,int y)
     {
-        if(board.isSet(x,y))
-        {
-            return false;
-        }
-        else if(board.isSet((x-1),y))
-        {
-            return true;
-        }
-        else if(board.isSet((x+1),y))
-        {
-            return true;
-        }
-        else if(board.isSet(x,y-1))
-        {
-            return true;
-        }
-        else if(board.isSet(x,y-1))
-        {
-            return true;
-        }
-
-        return false;
+        return true;
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -251,20 +230,35 @@ public class GameScreen extends AppCompatActivity {
 
         if (id == 1 &&isPlayer)
         {
-            originalIDs = new OriginalBoardTiles[7];
-            originalRack = new OriginalRack[7];
-            playingCount = 0;
-            myTurn = false;
-            String finalWord = builder.toString();
-            Toast.makeText(getApplicationContext(), finalWord, Toast.LENGTH_SHORT).show();
-            builder = new StringBuilder();
+            try {
+                originalIDs = new OriginalBoardTiles[7];
+                originalRack = new OriginalRack[7];
+                playingCount = 0;
+                myTurn = false;
+                String finalWord = builder.toString();
+                //Toast.makeText(getApplicationContext(), finalWord, Toast.LENGTH_SHORT).show();
+                builder = new StringBuilder();
 
-            CellSetter [] array = cellSetters.toArray(new CellSetter[cellSetters.size()]);
-            sender = new PacketSender(array);
-            sender.execute((Void) null);
+                CellSetter[] array = cellSetters.toArray(new CellSetter[cellSetters.size()]);
+                sender = new PacketSender(array);
+                sender.execute((Void) null);
 
-            wait = new PacketWait(packet);
-            wait.execute((Void) null);
+                wait = new PacketWait(packet);
+                wait.execute((Void) null);
+
+                wait = new PacketWait(packet);
+                wait.execute((Void) null);
+
+                wait = new PacketWait(packet);
+                wait.execute((Void) null);
+
+                wait = new PacketWait(packet);
+                wait.execute((Void) null);
+            }
+            catch (Exception e)
+            {
+
+            }
         }
 
         else if (id == 2&&isPlayer)
@@ -475,7 +469,7 @@ public class GameScreen extends AppCompatActivity {
     }
 
 
-    public void evaluateData(Packet packet, boolean isUpdate)
+    public boolean evaluateData(Packet packet, boolean isUpdate)
     {
         if(isUpdate)
         {
@@ -530,6 +524,7 @@ public class GameScreen extends AppCompatActivity {
                 player3.setTextColor(Color.rgb(164,54,55));
                 player4.setTextColor(Color.GREEN);
             }
+            return myTurn;
         }
         else
         {
@@ -548,6 +543,7 @@ public class GameScreen extends AppCompatActivity {
             }
 
             piecesGrid.setAdapter(pieceAdapter);
+            return true;
         }
     }
 
@@ -736,8 +732,9 @@ public class GameScreen extends AppCompatActivity {
         {
             if (success)
             {
+                boolean willWaitAgain;
                 if(dataPacket != null)
-                    evaluateData(dataPacket, true);
+                    willWaitAgain = evaluateData(dataPacket, true);
                 if(movePacket != null)
                     evaluateData(movePacket, false);
             }
